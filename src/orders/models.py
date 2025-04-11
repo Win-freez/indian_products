@@ -1,5 +1,6 @@
 import enum
 from decimal import Decimal
+
 from sqlalchemy import Integer, ForeignKey, DECIMAL, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
@@ -21,8 +22,6 @@ class Order(Base):
 
     user: Mapped['User'] = relationship("User", back_populates='orders')
     order_item: Mapped['OrderItem'] = relationship('OrderItem', back_populates='order')
-
-
 
 class OrderItem(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

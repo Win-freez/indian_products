@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     def base_url(self):
         return  f"postgresql+asyncpg://{self.DB_USERNAME}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
+    @property
+    def alembic_url(self):
+        return f"postgresql://{self.DB_USERNAME}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
     model_config = SettingsConfigDict(env_file=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 settings = Settings()

@@ -1,9 +1,10 @@
-from typing import Optional
-from src.database import Base
-from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, Float, func, DECIMAL
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Optional
+
+from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, Float, func, DECIMAL, Boolean, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from src.database import Base
 
 
 class Product(Base):
@@ -19,6 +20,7 @@ class Product(Base):
     rating: Mapped[float] = mapped_column(Float, nullable=True, default=0.0)
     category_id: Mapped[Optional[int]] = mapped_column(ForeignKey('categories.id', ondelete='SET NULL'), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, server_default=func.now())
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text('TRUE'))
 
     category: Mapped['Category'] = relationship('Category', back_populates='products', passive_deletes=True)
 
