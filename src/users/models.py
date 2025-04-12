@@ -11,6 +11,6 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     hashed_password: Mapped[str] = mapped_column(String(128), nullable=False)
 
-    orders: Mapped[list['Order']] = relationship('Order', back_populates='user', cascade='all, delete-orhpan')
+    orders: Mapped[list['Order']] = relationship('Order', back_populates='user', cascade='all, delete-orphan')
 
 

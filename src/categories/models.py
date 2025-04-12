@@ -1,16 +1,20 @@
-from sqlalchemy import String
+from sqlalchemy import String, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.schema import CreateTable
+from slugify import slugify
+
 from src.database import Base
 
 
 class Category(Base):
     __tablename__ = 'categories'
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True)
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
 
     products: Mapped[list["Product"]] = relationship('Product', back_populates='category')
 
 
-print(CreateTable(Category.__table__))
+@event.listens_for(Category, 'before_insert')
+def generate_slug(mapper, connection, target):
+    if not target.slug:
+        target.slug = slugify(target.name)
