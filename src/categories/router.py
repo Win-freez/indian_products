@@ -56,7 +56,7 @@ async def update_category(db: Annotated[AsyncSession, Depends(get_db)],
                 slug=slugify(updated_category.name),
                 parent_id=updated_category.parent_id)
     )
-    result = await db.execute(stmt)
+    await db.execute(stmt)
     await db.commit()
 
     return None
