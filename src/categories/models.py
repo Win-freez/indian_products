@@ -1,4 +1,6 @@
-from sqlalchemy import String, event
+from typing import Optional
+
+from sqlalchemy import String, event, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from slugify import slugify
 
@@ -10,7 +12,8 @@ class Category(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), unique=True)
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey('categories.id', ondelete='SET NULL'), nullable=True)
+    
     products: Mapped[list["Product"]] = relationship('Product', back_populates='category')
 
 

@@ -10,8 +10,8 @@ from src.database import Base
 from src.config import settings
 
 from src.categories.models import Category
-from src.orders.models import Order, OrderItem
 from src.products.models import Product
+from src.orders.models import Order, OrderItem
 from src.users.models import User
 
 # this is the Alembic Config object, which provides

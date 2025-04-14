@@ -1,11 +1,14 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, Float, func, DECIMAL, Boolean, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 
+
+if TYPE_CHECKING:
+    from src.orders.models import OrderItem
 
 class Product(Base):
     __tablename__ = 'products'
@@ -24,4 +27,3 @@ class Product(Base):
 
     category: Mapped['Category'] = relationship('Category', back_populates='products', passive_deletes=True)
 
-    order_item: Mapped['OrderItem'] = relationship('OrderItem', back_populates='products')
