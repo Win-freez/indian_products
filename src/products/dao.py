@@ -1,9 +1,10 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
+from pydantic import BaseModel
 
 from src.products.models import Product
-from src.products.schemas import ProductSchema, ProductFilters, ProductOutSchema
+from src.products.schemas import ProductSchema, ProductFilters, ProductUpdateSchema
 from src.products.dependencies import check_unique_product_slug
 from src.categories.models import Category
 
@@ -39,8 +40,10 @@ class ProductDAO:
         if category is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
-        stmt = select(Product).join(Category, Product.category_id == Category.id).where(
-            Product.category_id == category.id)
+        stmt = (
+            select(Product)
+            .where(Product.category_id == category.id)
+        )
         result = await db.execute(stmt)
         products = result.scalars().all()
 
@@ -71,7 +74,7 @@ class ProductDAO:
         return list(products)
 
     @classmethod
-    async def update_product(cls, db: AsyncSession, product_data: ProductSchema, product: Product) -> Product:
+    async def update_product(cls, db: AsyncSession, product_data: ProductSchema | ProductUpdateSchema, product: Product) -> Product:
 
         product_data_dict = product_data.model_dump(exclude_unset=True)
         new_name = product_data_dict.get('name')
@@ -87,6 +90,7 @@ class ProductDAO:
         await db.refresh(product)
 
         return product
+
 
     @classmethod
     async def delete_product(cls, db: AsyncSession, product: Product):

@@ -1,12 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, status, Depends, Response, HTTPException, Path
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.products.schemas import ProductSchema, ProductOutSchema, ProductFilters
+from src.products.schemas import ProductSchema, ProductOutSchema, ProductFilters, ProductUpdateSchema
 from src.products.models import Product
-from src.categories.models import Category
 from src.database import get_db
 from src.products.dependencies import product_by_slug
 from src.products.dao import ProductDAO
@@ -18,6 +16,12 @@ router = APIRouter(prefix='/products', tags=['products'])
 async def all_products(db: Annotated[AsyncSession, Depends(get_db)]) -> list[ProductOutSchema]:
     products = await ProductDAO.get_all_products(db)
     return [ProductOutSchema.model_validate(product) for product in products]
+
+
+@router.get('/{product_slug}', status_code=status.HTTP_200_OK)
+async def get_product(db: Annotated[AsyncSession, Depends(get_db)],
+                      product: Annotated[Product, Depends(product_by_slug)]) -> ProductOutSchema:
+    return ProductOutSchema.model_validate(product)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
@@ -49,6 +53,15 @@ async def filter_products(db: Annotated[AsyncSession, Depends(get_db)],
 @router.put('/{product_slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
                          product_data: ProductSchema,
+                         product: Annotated[Product, Depends(product_by_slug)],
+                         ) -> ProductOutSchema:
+    product = await ProductDAO.update_product(db=db, product_data=product_data, product=product)
+    return ProductOutSchema.model_validate(product)
+
+
+@router.patch('/{product_slug}')
+async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
+                         product_data: ProductUpdateSchema,
                          product: Annotated[Product, Depends(product_by_slug)],
                          ) -> ProductOutSchema:
     product = await ProductDAO.update_product(db=db, product_data=product_data, product=product)

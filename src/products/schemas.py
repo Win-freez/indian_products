@@ -47,5 +47,14 @@ class ProductFilters:
         self.is_active = is_active
         self.min_rating = min_rating
 
-class ProductUpdatePartialSchema(BaseModel):
-    pass
+class ProductUpdateSchema(BaseModel):
+    name: Annotated[Optional[str], Field(None, title='Название товара', min_length=2, max_length=255)]
+    description: Annotated[Optional[str], Field(None, title='Описание товара', max_length=1000)]
+    price: Annotated[Optional[Decimal], Field(None, ge=0, title='Цена товара')]
+    image_url: Annotated[Optional[str], Field(None, title='URL картинки товара')]
+    stock: Annotated[Optional[int], Field(None, ge=0, title='Остаток товара')]
+    rating: Annotated[Optional[float], Field(None, ge=0, le=5, title='Рейтинг товара')]
+    category_id: Annotated[Optional[int], Field(None, title='ID категории', examples=[None, 1])]
+    is_active: Annotated[Optional[bool], Field(None, title='Активен ли товар')]
+
+    model_config = ConfigDict(from_attributes=True)
