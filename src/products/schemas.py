@@ -8,9 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ProductSchema(BaseModel):
     name: Annotated[str, Field(..., title='Название товара', min_length=2, max_length=255)]
-    description: Annotated[Optional[str], Field(default="Нет описания", title='Описание товара', max_length=1000)]
+    description: Annotated[Optional[str], Field(default=None, title='Описание товара', max_length=1000)]
     price: Annotated[Decimal, Field(ge=0, title='Цена товара')]
-    image_url: Annotated[Optional[str], Field(title='URL картинки товара', description='URL для картинки товара')]
+    image_url: Annotated[str, Field(title='URL картинки товара')]
     stock: Annotated[int, Field(ge=0, title='Остаток товара')]
     rating: Annotated[float | int, Field(default=0, ge=0, le=5, title='Рейтинг товара')]
     category_id: Annotated[Optional[int], Field(default=None, title='ID категории', examples=[None, 1])]
@@ -48,13 +48,13 @@ class ProductFilters:
         self.min_rating = min_rating
 
 class ProductUpdateSchema(BaseModel):
-    name: Annotated[Optional[str], Field(None, title='Название товара', min_length=2, max_length=255)]
-    description: Annotated[Optional[str], Field(None, title='Описание товара', max_length=1000)]
-    price: Annotated[Optional[Decimal], Field(None, ge=0, title='Цена товара')]
-    image_url: Annotated[Optional[str], Field(None, title='URL картинки товара')]
-    stock: Annotated[Optional[int], Field(None, ge=0, title='Остаток товара')]
-    rating: Annotated[Optional[float], Field(None, ge=0, le=5, title='Рейтинг товара')]
-    category_id: Annotated[Optional[int], Field(None, title='ID категории', examples=[None, 1])]
-    is_active: Annotated[Optional[bool], Field(None, title='Активен ли товар')]
+    name: Annotated[Optional[str], Field(default=None, title='Название товара', min_length=2, max_length=255, example="iPhone 14")]
+    description: Annotated[Optional[str], Field(default=None, title='Описание товара', max_length=1000, example="Современный смартфон от Apple")]
+    price: Annotated[Optional[Decimal], Field(default=None, ge=0, title='Цена товара', example=799.99)]
+    image_url: Annotated[Optional[str], Field(default=None, title='URL картинки товара', example="https://example.com/image.png")]
+    stock: Annotated[Optional[int], Field(default=None, ge=0, title='Остаток товара', example=10)]
+    rating: Annotated[Optional[float], Field(default=None, ge=0, le=5, title='Рейтинг товара', example=4.8)]
+    category_id: Annotated[Optional[int], Field(default=None, title='ID категории', example=1)]
+    is_active: Annotated[Optional[bool], Field(default=None, title='Активен ли товар', example=True)]
 
     model_config = ConfigDict(from_attributes=True)

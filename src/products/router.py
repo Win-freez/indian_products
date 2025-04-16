@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.products.schemas import ProductSchema, ProductOutSchema, ProductFilters, ProductUpdateSchema
 from src.products.models import Product
 from src.database import get_db
-from src.products.dependencies import product_by_slug
+from src.dependecies.dependencies import get_instance_by_slug
 from src.products.dao import ProductDAO
 
 router = APIRouter(prefix='/products', tags=['products'])
@@ -14,13 +14,15 @@ router = APIRouter(prefix='/products', tags=['products'])
 
 @router.get('/', status_code=status.HTTP_200_OK)
 async def all_products(db: Annotated[AsyncSession, Depends(get_db)]) -> list[ProductOutSchema]:
-    products = await ProductDAO.get_all_products(db)
+    products = await ProductDAO.get_all(db)
     return [ProductOutSchema.model_validate(product) for product in products]
 
 
-@router.get('/{product_slug}', status_code=status.HTTP_200_OK)
-async def get_product(db: Annotated[AsyncSession, Depends(get_db)],
-                      product: Annotated[Product, Depends(product_by_slug)]) -> ProductOutSchema:
+@router.get('/{slug}', status_code=status.HTTP_200_OK)
+async def get_product(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    product: Annotated[Product, Depends(get_instance_by_slug(Product))]
+) -> ProductOutSchema:
     return ProductOutSchema.model_validate(product)
 
 
@@ -34,7 +36,7 @@ async def create_product(db: Annotated[AsyncSession, Depends(get_db)],
     return ProductOutSchema.model_validate(product)
 
 
-@router.get('/{category_slug}', status_code=status.HTTP_200_OK)
+@router.get('/category/{slug}', status_code=status.HTTP_200_OK)
 async def product_by_category(db: Annotated[AsyncSession, Depends(get_db)],
                               category_slug: str) -> list[ProductOutSchema]:
     products = await ProductDAO.get_product_by_category(db=db, category_slug=category_slug)
@@ -50,25 +52,25 @@ async def filter_products(db: Annotated[AsyncSession, Depends(get_db)],
     return [ProductOutSchema.model_validate(product) for product in products]
 
 
-@router.put('/{product_slug}')
+@router.put('/{slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
                          product_data: ProductSchema,
-                         product: Annotated[Product, Depends(product_by_slug)],
+                         product: Annotated[Product, Depends(get_instance_by_slug(Product))],
                          ) -> ProductOutSchema:
     product = await ProductDAO.update_product(db=db, product_data=product_data, product=product)
     return ProductOutSchema.model_validate(product)
 
 
-@router.patch('/{product_slug}')
+@router.patch('/{slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
                          product_data: ProductUpdateSchema,
-                         product: Annotated[Product, Depends(product_by_slug)],
+                         product: Annotated[Product, Depends(get_instance_by_slug(Product))],
                          ) -> ProductOutSchema:
     product = await ProductDAO.update_product(db=db, product_data=product_data, product=product)
     return ProductOutSchema.model_validate(product)
 
 
-@router.delete('/{product_slug}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{slug}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_products(db: Annotated[AsyncSession, Depends(get_db)],
-                          product: Product = Depends(product_by_slug)) -> None:
-    await ProductDAO.delete_product(db=db, product=product)
+                          product: Product = Depends(get_instance_by_slug(Product))) -> None:
+    await ProductDAO.delete(db=db, obj=product)

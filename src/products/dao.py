@@ -1,27 +1,20 @@
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
-from pydantic import BaseModel
 
+from src.dao.base_dao import BaseDao
 from src.products.models import Product
 from src.products.schemas import ProductSchema, ProductFilters, ProductUpdateSchema
-from src.products.dependencies import check_unique_product_slug
+from src.dependecies.dependencies import check_unique_slug
 from src.categories.models import Category
 
 
-class ProductDAO:
-
-    @classmethod
-    async def get_all_products(cls, db: AsyncSession) -> list[Product]:
-        stmt = select(Product).order_by(Product.name)
-        result = await db.execute(stmt)
-        products = result.scalars().all()
-
-        return list(products)
+class ProductDAO(BaseDao):
+    model = Product
 
     @classmethod
     async def create_product(cls, db: AsyncSession, new_product: ProductSchema) -> Product:
-        slug = await check_unique_product_slug(name=new_product.name, db=db)
+        slug = await check_unique_slug(name=new_product.name, model=Product, db=db)
 
         product = Product(**new_product.model_dump(), slug=slug)
         db.add(product)
@@ -80,7 +73,7 @@ class ProductDAO:
         new_name = product_data_dict.get('name')
 
         if new_name and new_name != product.name:
-            slug = await check_unique_product_slug(db=db, name=new_name)
+            slug = await check_unique_slug(db=db, model=Product, name=new_name)
             setattr(product, 'slug', slug)
 
         for key, value in product_data_dict.items():
@@ -92,7 +85,3 @@ class ProductDAO:
         return product
 
 
-    @classmethod
-    async def delete_product(cls, db: AsyncSession, product: Product):
-        await db.delete(product)
-        await db.commit()
