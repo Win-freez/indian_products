@@ -1,14 +1,9 @@
 import enum
-from typing import TYPE_CHECKING
 from decimal import Decimal
 
 from sqlalchemy import Integer, ForeignKey, DECIMAL, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
-
-
-if TYPE_CHECKING:
-    from src.products.models import Product
 
 
 class OrderEnum(enum.Enum):

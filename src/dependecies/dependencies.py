@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import Base
 
 from src.database import get_db
-from src.products.models import Product
 
 
 def get_instance_by_slug(model: Type[Base]):
@@ -47,3 +46,19 @@ async def check_unique_slug(
         )
 
     return slug
+
+
+def get_item_by_id(model: Type[Base]):
+    async def dependency(id: int = Path(..., description="ID объекта"),
+                         db: AsyncSession = Depends(get_db)) -> Base:
+        stmt = select(model).where(model.id == id)
+        result = await db.execute(stmt)
+
+        item = result.scalar_one_or_none()
+
+        if not item:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'{model.__name__} с ID {id} не найден')
+
+        return item
+
+    return dependency

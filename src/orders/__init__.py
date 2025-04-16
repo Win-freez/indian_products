@@ -1,1 +1,1 @@
-from src.orders.models import Order, OrderItem
+from src.users.models import User
