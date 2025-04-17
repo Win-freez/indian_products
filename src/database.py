@@ -27,3 +27,12 @@ class Base(DeclarativeBase):
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, server_default=func.now())
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, onupdate=datetime.utcnow, default=None)
+
+    def __repr__(self):
+        cols = []
+        columns_to_show = 3
+        for idx, col in enumerate(self.__table__.columns.keys()):
+            if idx < columns_to_show:
+                col.append(f"{col}={getattr(self, col)}")
+
+        return f"<{self.__class__.__name__} {', '.join(cols)}>"
