@@ -1,5 +1,5 @@
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -18,7 +18,8 @@ class OrderItemOutSchema(OrderItemSchema):
     id: Annotated[int, Field(..., ge=0, description='Уникальный ID позиции в заказе')]
     order_id: Annotated[int, Field(..., ge=0, description='ID заказа')]
     product_name: Annotated[str, Field(..., max_length=255, description='Название продукта')]
-    price_at_time: Annotated[Decimal, Field(..., max_digits=10, decimal_places=2, description='Цена товара в момент заказа')]
+    price_at_time: Annotated[
+        Decimal, Field(..., max_digits=10, decimal_places=2, description='Цена товара в момент заказа')]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,7 +29,6 @@ class OrderSchema(BaseModel):
     order_items: list[OrderItemSchema]
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class OrderOutSchema(OrderSchema):

@@ -1,8 +1,15 @@
+from decimal import Decimal
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from src.orders.models import Order
+
+from src.dependecies.dependencies import get_item_by_id
+from src.orders.models import Order, OrderItem
+from src.orders.schemas import OrderSchema, OrderEnum
+from src.products.models import Product
+from src.users.models import User
 
 
 class OrderDAO:
@@ -25,3 +32,60 @@ class OrderDAO:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Заказ с ID {id} не найден')
 
         return order
+
+    @classmethod
+    async def create_order(cls, db: AsyncSession, new_order: OrderSchema) -> Order:
+        user = await get_item_by_id(User)(db=db, id=new_order.user_id)
+
+        order = Order(
+            user_id=new_order.user_id,
+            total_price=Decimal('0.00'),
+            status=OrderEnum.pending
+        )
+
+        db.add(order)
+        await db.flush()
+
+        slugs = [item.product_slug for item in new_order.order_items]
+        stmt = select(Product).where(Product.slug.in_(slugs))
+        result = await db.execute(stmt)
+        products = {product.slug: product for product in result.scalars().all()}
+
+        missing_slugs = [item.product_slug for item in new_order.order_items if item.product_slug not in products]
+        if missing_slugs:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Товары с такими slugs не найдены: {', '.join(missing_slugs)}"
+            )
+
+        order_items = []
+        total_price = 0
+
+        for item in new_order.order_items:
+            product = products[item.product_slug]
+            total_price += item.quantity * product.price
+
+            if item.quantity > product.stock:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail=f"Недостаточно товара в остатках: {product.name}")
+
+            order_item = OrderItem(
+                order_id=order.id,
+                product_slug=product.slug,
+                product_name_snapshot=product.name,
+                quantity=item.quantity,
+                price_at_time=product.price
+            )
+
+            order_items.append(order_item)
+
+        order.total_price = total_price
+
+        db.add_all(order_items)
+        await db.commit()
+
+        stmt = select(Order).where(Order.id == order.id).options(joinedload(Order.order_items))
+        result = await db.execute(stmt)
+        order_to_validate = result.unique().scalar_one_or_none()
+
+        return order_to_validate

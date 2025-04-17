@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy import Integer, ForeignKey, DECIMAL, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.database import Base
 
 
@@ -35,4 +36,3 @@ class OrderItem(Base):
     price_at_time: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
 
     order: Mapped['Order'] = relationship('Order', back_populates='order_items')
-

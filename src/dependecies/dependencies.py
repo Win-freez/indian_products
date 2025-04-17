@@ -1,11 +1,11 @@
-from typing import Annotated, Type
+from typing import Type
 
-from slugify import slugify
 from fastapi import HTTPException, status, Path, Depends
+from slugify import slugify
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database import Base
 
+from src.database import Base
 from src.database import get_db
 
 
