@@ -15,8 +15,8 @@ class OrderItemSchema(BaseModel):
 
 
 class OrderItemOutSchema(OrderItemSchema):
-    id: Annotated[int, Field(..., ge=0, description='Уникальный ID позиции в заказе')]
-    order_id: Annotated[int, Field(..., ge=0, description='ID заказа')]
+    id: Annotated[int, Field(..., gt=0, description='Уникальный ID позиции в заказе')]
+    order_id: Annotated[int, Field(..., gt=0, description='ID заказа')]
     product_name: Annotated[str, Field(..., max_length=255, description='Название продукта')]
     price_at_time: Annotated[
         Decimal, Field(..., max_digits=10, decimal_places=2, description='Цена товара в момент заказа')]
@@ -24,18 +24,20 @@ class OrderItemOutSchema(OrderItemSchema):
     model_config = ConfigDict(from_attributes=True)
 
 
-class OrderSchema(BaseModel):
-    user_id: Annotated[int, Field(..., ge=0, description='ID пользователя')]
+class OrderCreateSchema(BaseModel):
+    user_id: Annotated[int, Field(..., gt=0, description='ID пользователя')]
     order_items: list[OrderItemSchema]
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class OrderOutSchema(OrderSchema):
-    id: Annotated[int, Field(..., ge=0, description='ID заказа')]
+class OrderOutSchema(BaseModel):
+    id: Annotated[int, Field(..., gt=0, description='ID заказа')]
     total_price: Annotated[Decimal, Field(..., ge=0, max_digits=10, decimal_places=2, description='Сумма заказа')]
     status: Annotated[OrderEnum, Field(..., description='Статус заказа')]
     created_at: Annotated[datetime, Field(..., title='Дата создания заказа')]
     updated_at: Annotated[Optional[datetime], Field(default=None, title='Дата обновления заказа')]
+    user_id: Annotated[int, Field(..., gt=0, description='ID пользователя')]
+    order_items: list[OrderItemSchema]
 
     model_config = ConfigDict(from_attributes=True)

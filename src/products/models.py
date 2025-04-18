@@ -1,9 +1,10 @@
-from datetime import datetime
 from decimal import Decimal
-from typing import Optional, TYPE_CHECKING
+from decimal import Decimal
+from typing import Optional
 
-from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, Float, func, DECIMAL, Boolean, text
+from sqlalchemy import Integer, String, Text, ForeignKey, Float, DECIMAL, Boolean, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.database import Base
 
 

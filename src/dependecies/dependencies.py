@@ -49,15 +49,15 @@ async def check_unique_slug(
 
 
 def get_item_by_id(model: Type[Base]):
-    async def dependency(id: int = Path(..., description="ID объекта"),
+    async def dependency(object_id: int = Path(..., description="ID объекта"),
                          db: AsyncSession = Depends(get_db)) -> Base:
-        stmt = select(model).where(model.id == id)
+        stmt = select(model).where(model.id == object_id)
         result = await db.execute(stmt)
 
         item = result.scalar_one_or_none()
 
         if not item:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'{model.__name__} с ID {id} не найден')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'{model.__name__} с ID {object_id} не найден')
 
         return item
 

@@ -22,7 +22,12 @@ class Order(Base):
     status: Mapped[OrderEnum] = mapped_column(Enum(OrderEnum), default=OrderEnum.pending)
 
     user: Mapped['User'] = relationship('User', back_populates='orders')
-    order_items: Mapped[list['OrderItem']] = relationship('OrderItem', back_populates='order')
+    order_items: Mapped[list['OrderItem']] = relationship(
+        'OrderItem',
+        back_populates='order',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
 
 
 class OrderItem(Base):

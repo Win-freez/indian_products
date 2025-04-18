@@ -1,21 +1,22 @@
 from decimal import Decimal
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from src.dao.base_dao import BaseDao
 from src.dependecies.dependencies import get_item_by_id
 from src.orders.models import Order, OrderItem
-from src.orders.schemas import OrderSchema, OrderEnum
+from src.orders.schemas import OrderCreateSchema, OrderEnum
 from src.products.models import Product
 from src.users.models import User
 
 
-class OrderDAO:
+class OrderDAO(BaseDao):
 
     @classmethod
-    async def get_orders(cls, db: AsyncSession) -> list[Order]:
+    async def get_all(cls, db: AsyncSession) -> list[Order]:
         stmt = select(Order).options(joinedload(Order.order_items))
         result = await db.execute(stmt)
         orders = result.unique().scalars().all()
@@ -23,19 +24,19 @@ class OrderDAO:
         return list(orders)
 
     @classmethod
-    async def get_order_by_id(cls, db: AsyncSession, id: int) -> Order:
-        stmt = select(Order).where(Order.id==id).options(joinedload(Order.order_items))
+    async def get_order_by_id(cls, db: AsyncSession, object_id: int) -> Order:
+        stmt = select(Order).where(Order.id == object_id).options(joinedload(Order.order_items))
         result = await db.execute(stmt)
         order = result.unique().scalar_one_or_none()
 
         if not order:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Заказ с ID {id} не найден')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Заказ с ID {object_id} не найден')
 
         return order
 
     @classmethod
-    async def create_order(cls, db: AsyncSession, new_order: OrderSchema) -> Order:
-        user = await get_item_by_id(User)(db=db, id=new_order.user_id)
+    async def create_order(cls, db: AsyncSession, new_order: OrderCreateSchema) -> Order:
+        user = await get_item_by_id(User)(db=db, object_id=new_order.user_id)
 
         order = Order(
             user_id=new_order.user_id,
@@ -62,12 +63,15 @@ class OrderDAO:
         total_price = 0
 
         for item in new_order.order_items:
+
             product = products[item.product_slug]
-            total_price += item.quantity * product.price
 
             if item.quantity > product.stock:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail=f"Недостаточно товара в остатках: {product.name}")
+                                    detail=f"Недостаточно товара в остатках: {product.name}. Остаток {product.stock}")
+
+            product.stock -= item.quantity
+            total_price += item.quantity * product.price
 
             order_item = OrderItem(
                 order_id=order.id,
@@ -89,3 +93,35 @@ class OrderDAO:
         order_to_validate = result.unique().scalar_one_or_none()
 
         return order_to_validate
+
+    @classmethod
+    async def cancel_order(cls, db: AsyncSession, object_id: int):
+        order = await cls.get_order_by_id(db=db, object_id=object_id)
+
+        if order.status in {OrderEnum.cancelled, OrderEnum.completed}:
+            raise HTTPException(status_code=400, detail="Заказ уже отменён или завершён")
+
+        products_to_return = {}
+
+        for item in order.order_items:
+            products_to_return[item.product_slug] = item.quantity
+
+        stmt = (
+            update(Product)
+            .where(Product.slug.in_(products_to_return.keys()))
+            .values(stock=case(*[
+                (Product.slug == slug, Product.stock + quantity)
+                for slug, quantity in products_to_return.items()
+            ]))
+        )
+
+        result = await db.execute(stmt)
+
+        if result.rowcount == 0:
+            raise HTTPException(status_code=500, detail="Ошибка обновления количества товаров")
+
+        order.status = OrderEnum.cancelled
+        await db.commit()
+        await db.refresh(order)
+
+        return order
