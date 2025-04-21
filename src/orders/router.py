@@ -26,7 +26,7 @@ async def get_order(db: Annotated[AsyncSession, Depends(get_db)],
     return OrderOutSchema.model_validate(order)
 
 
-@router.post('/{object_id}', status_code=status.HTTP_201_CREATED)
+@router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_order(db: Annotated[AsyncSession, Depends(get_db)],
                        new_order: OrderCreateSchema) -> OrderOutSchema:
     order = await OrderDAO.create_order(db=db, new_order=new_order)

@@ -33,6 +33,6 @@ class Base(DeclarativeBase):
         columns_to_show = 3
         for idx, col in enumerate(self.__table__.columns.keys()):
             if idx < columns_to_show:
-                col.append(f"{col}={getattr(self, col)}")
+                cols.append(f"{col}={getattr(self, col)}")
 
         return f"<{self.__class__.__name__} {', '.join(cols)}>"

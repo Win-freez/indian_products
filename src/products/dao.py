@@ -1,12 +1,12 @@
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.categories.models import Category
 from src.dao.base_dao import BaseDao
+from src.dependecies.dependencies import check_unique_slug
 from src.products.models import Product
 from src.products.schemas import ProductSchema, ProductFilters, ProductUpdateSchema
-from src.dependecies.dependencies import check_unique_slug
-from src.categories.models import Category
 
 
 class ProductDAO(BaseDao):
@@ -14,14 +14,8 @@ class ProductDAO(BaseDao):
 
     @classmethod
     async def create_product(cls, db: AsyncSession, new_product: ProductSchema) -> Product:
-        slug = await check_unique_slug(name=new_product.name, model=Product, db=db)
-
-        product = Product(**new_product.model_dump(), slug=slug)
-        db.add(product)
-
-        await db.commit()
-        await db.refresh(product)
-
+        slug = await check_unique_slug(name=new_product.name, model=cls.model, db=db)
+        product = await cls.create(db=db, **new_product.model_dump(), slug=slug)
         return product
 
     @classmethod
@@ -67,21 +61,14 @@ class ProductDAO(BaseDao):
         return list(products)
 
     @classmethod
-    async def update_product(cls, db: AsyncSession, product_data: ProductSchema | ProductUpdateSchema, product: Product) -> Product:
+    async def update_product(cls, db: AsyncSession, product_data: ProductSchema | ProductUpdateSchema,
+                             product: Product) -> Product:
 
-        product_data_dict = product_data.model_dump(exclude_unset=True)
-        new_name = product_data_dict.get('name')
+        data = product_data.model_dump(exclude_unset=True)
 
-        if new_name and new_name != product.name:
-            slug = await check_unique_slug(db=db, model=Product, name=new_name)
-            setattr(product, 'slug', slug)
+        if 'name' in data and data['name'] != product.name:
+            data['slug'] = await check_unique_slug(db=db, model=cls.model, name=data['name'])
 
-        for key, value in product_data_dict.items():
-            setattr(product, key, value)
+        updated_product = await cls.update(db=db, instance=product, **data)
 
-        await db.commit()
-        await db.refresh(product)
-
-        return product
-
-
+        return updated_product
