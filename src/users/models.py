@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 
@@ -12,6 +12,7 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(50), nullable=False)
     last_name: Mapped[str] = mapped_column(String(50), nullable=False)
     phone_number: Mapped[str] = mapped_column(String(20), nullable=False)
+    is_admin: Mapped[bool] = mapped_column(default=False, server_default=text('FALSE'), nullable=False)
 
 
 
