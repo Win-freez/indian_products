@@ -1,6 +1,9 @@
-import os
+from pathlib import Path
 
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).parent.parent
 
 
 class Settings(BaseSettings):
@@ -9,8 +12,6 @@ class Settings(BaseSettings):
     DB_USERNAME: str
     DB_PASSWORD: str
     DB_NAME: str
-    SECRET_KEY: str
-    ALGORITHM: str
 
     @property
     def base_url(self):
@@ -26,15 +27,19 @@ class Settings(BaseSettings):
             "pk": "pk_%(table_name)s"
         }
 
-    @property
-    def auth_data(self):
-        return {'secret_key': self.SECRET_KEY, 'algorithm': self.ALGORITHM}
-
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        env_file=os.path.join(os.path.dirname(__file__), '..', '.env'),
+        env_file=BASE_DIR / '.env',
         env_file_encoding='utf-8',
     )
 
 
+class AuthJWT(BaseModel):
+    private_key_path: Path = BASE_DIR / 'certificates' / 'jwt-private.pem'
+    public_key_path: Path = BASE_DIR / 'certificates' / 'jwt-public.pem'
+    algorithm: str = 'RS256'
+    access_token_expire_minutes: int = 30
+
+
 settings = Settings()
+auth_jwt: AuthJWT = AuthJWT()

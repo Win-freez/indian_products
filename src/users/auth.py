@@ -1,37 +1,33 @@
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, UTC, timedelta
 
-from fastapi import Request, HTTPException, status
-from jose import jwt
-from passlib.context import CryptContext
-from pydantic import EmailStr
-from sqlalchemy.ext.asyncio import AsyncSession
+import bcrypt
+import jwt
 
-from src.config import settings
-from src.users.dao import UserDao
-
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+from src.config import auth_jwt
 
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+def encode_jwt(payload: dict,
+               private_key: str = auth_jwt.private_key_path.read_text(),
+               algorithm: str = auth_jwt.algorithm,
+               expire_minutes: int = auth_jwt.access_token_expire_minutes) -> str:
+    to_encode = payload.copy()
+    to_encode['exp'] = datetime.now(UTC) + timedelta(minutes=expire_minutes)
+    encoded = jwt.encode(to_encode, key=private_key, algorithm=algorithm)
+    return encoded
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+def decode_jwt(token: str | bytes,
+               public_key: str = auth_jwt.public_key_path.read_text(),
+               algorithm: str = auth_jwt.algorithm):
+    decoded = jwt.decode(token, key=public_key, algorithms=[algorithm])
+    return decoded
 
 
-def create_access_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(UTC) + timedelta(hours=1)
-    to_encode.update({'exp': expire})
-    auth_data = settings.auth_data
-    encode_jwt = jwt.encode(to_encode, key=auth_data['secret_key'], algorithm=auth_data['algorithm'])
-    return encode_jwt
+def hash_password(password: str) -> str:
+    hashed_password = bcrypt.hashpw(password.encode(), salt=bcrypt.gensalt())
+    return hashed_password.decode()
 
 
-async def authenticate_user(db: AsyncSession, email: EmailStr, password: str):
-    user = await UserDao.get_user_by_email(db=db, user_email=email)
-    if not user or verify_password(plain_password=password, hashed_password=user.hashed_password) is False:
-        return None
-    return user
+def validate_password(password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed_password.encode())
 

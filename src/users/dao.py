@@ -1,8 +1,11 @@
+from fastapi import HTTPException, status
 from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.users.models import User
+from src.users.schemas import UserRegisterSchema
+from src.users.auth import hash_password
 
 
 class UserDao:
@@ -20,5 +23,23 @@ class UserDao:
         stmt = select(User).where(User.id == user_id)
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
+
+        return user
+
+    @classmethod
+    async def create_user(cls, db: AsyncSession, user_data: UserRegisterSchema) -> User:
+        existing_user = await cls.get_user_by_email(db=db, user_email=user_data.email)
+
+        if existing_user:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                                detail=f"User with email: {user_data.email} already exists")
+
+        hashed_password = hash_password(user_data.password)
+
+        user = User(**user_data.model_dump(exclude={'password'}), hashed_password=hashed_password)
+        db.add(user)
+
+        await db.commit()
+        await db.refresh(user)
 
         return user
