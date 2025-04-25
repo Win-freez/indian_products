@@ -1,12 +1,11 @@
 from decimal import Decimal
 
 from fastapi import HTTPException, status
-from sqlalchemy import select, update, case
+from sqlalchemy import select, update, case, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.dao.base_dao import BaseDao
-from src.dependecies.dependencies import get_item_by_id
 from src.orders.models import Order, OrderItem
 from src.orders.schemas import OrderCreateSchema, OrderEnum
 from src.products.models import Product
@@ -16,16 +15,30 @@ from src.users.models import User
 class OrderDAO(BaseDao):
 
     @classmethod
-    async def get_all(cls, db: AsyncSession) -> list[Order]:
-        stmt = select(Order).options(joinedload(Order.order_items))
+    async def get_all_order(cls, db: AsyncSession, user: User) -> list[Order]:
+        if user.is_admin:
+            stmt = select(Order).options(joinedload(Order.order_items))
+        else:
+            stmt = select(Order).options(joinedload(Order.order_items)).where(Order.user_id == user.id)
         result = await db.execute(stmt)
         orders = result.unique().scalars().all()
 
         return list(orders)
 
     @classmethod
-    async def get_order_by_id(cls, db: AsyncSession, object_id: int) -> Order:
-        stmt = select(Order).where(Order.id == object_id).options(joinedload(Order.order_items))
+    async def get_user_order_by_id(cls, db: AsyncSession, user: User, object_id: int) -> Order:
+        if user.is_admin:
+            stmt = (
+                select(Order)
+                .where(Order.id == object_id)
+                .options(joinedload(Order.order_items))
+            )
+        else:
+            stmt = (
+                select(Order)
+                .where(and_(Order.id == object_id, Order.user_id == user.id))
+                .options(joinedload(Order.order_items))
+            )
         result = await db.execute(stmt)
         order = result.unique().scalar_one_or_none()
 
@@ -35,11 +48,10 @@ class OrderDAO(BaseDao):
         return order
 
     @classmethod
-    async def create_order(cls, db: AsyncSession, new_order: OrderCreateSchema) -> Order:
-        user = await get_item_by_id(User)(db=db, object_id=new_order.user_id)
+    async def create_order(cls, db: AsyncSession, user: User, new_order: OrderCreateSchema) -> Order:
 
         order = Order(
-            user_id=new_order.user_id,
+            user_id=user.id,
             total_price=Decimal('0.00'),
             status=OrderEnum.pending
         )
@@ -88,15 +100,13 @@ class OrderDAO(BaseDao):
         db.add_all(order_items)
         await db.commit()
 
-        stmt = select(Order).where(Order.id == order.id).options(joinedload(Order.order_items))
-        result = await db.execute(stmt)
-        order_to_validate = result.unique().scalar_one_or_none()
+        user_order = await cls.get_user_order_by_id(db=db, user=user, object_id=order.id)
 
-        return order_to_validate
+        return user_order
 
     @classmethod
-    async def cancel_order(cls, db: AsyncSession, object_id: int):
-        order = await cls.get_order_by_id(db=db, object_id=object_id)
+    async def cancel_order(cls, db: AsyncSession, user: User, object_id: int):
+        order = await cls.get_user_order_by_id(db=db, user=user, object_id=object_id)
 
         if order.status in {OrderEnum.cancelled, OrderEnum.completed}:
             raise HTTPException(status_code=400, detail="Заказ уже отменён или завершён")

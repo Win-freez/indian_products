@@ -25,7 +25,6 @@ class OrderItemOutSchema(OrderItemSchema):
 
 
 class OrderCreateSchema(BaseModel):
-    user_id: Annotated[int, Field(..., gt=0, description='ID пользователя')]
     order_items: list[OrderItemSchema]
 
     model_config = ConfigDict(from_attributes=True)

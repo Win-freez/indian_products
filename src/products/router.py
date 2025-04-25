@@ -1,13 +1,15 @@
 from typing import Annotated
 
-from fastapi import APIRouter, status, Depends, Response, HTTPException, Path
+from fastapi import APIRouter, status, Depends, Response, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.products.schemas import ProductSchema, ProductOutSchema, ProductFilters, ProductUpdateSchema
-from src.products.models import Product
 from src.database import get_db
 from src.dependecies.dependencies import get_instance_by_slug
 from src.products.dao import ProductDAO
+from src.products.models import Product
+from src.products.schemas import ProductSchema, ProductOutSchema, ProductFilters, ProductUpdateSchema
+from src.users.dependencies import get_user_using_token
+from src.users.models import User
 
 router = APIRouter(prefix='/products', tags=['products'])
 
@@ -20,17 +22,18 @@ async def all_products(db: Annotated[AsyncSession, Depends(get_db)]) -> list[Pro
 
 @router.get('/{slug}', status_code=status.HTTP_200_OK)
 async def get_product(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    product: Annotated[Product, Depends(get_instance_by_slug(Product))]
+        db: Annotated[AsyncSession, Depends(get_db)],
+        product: Annotated[Product, Depends(get_instance_by_slug(Product))]
 ) -> ProductOutSchema:
     return ProductOutSchema.model_validate(product)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_product(db: Annotated[AsyncSession, Depends(get_db)],
+                         user: Annotated[User, Depends(get_user_using_token)],
                          new_product: ProductSchema,
                          response: Response) -> ProductOutSchema:
-    product = await ProductDAO.create_product(db, new_product)
+    product = await ProductDAO.create_product(db, user, new_product)
     response.headers['Location'] = f"{router.prefix}/{product.slug}"
 
     return ProductOutSchema.model_validate(product)
@@ -54,23 +57,27 @@ async def filter_products(db: Annotated[AsyncSession, Depends(get_db)],
 
 @router.put('/{slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
-                         product_data: ProductSchema,
+                         user: Annotated[User, Depends()],
+                         product_data: Annotated[ProductSchema, Body()],
                          product: Annotated[Product, Depends(get_instance_by_slug(Product))],
                          ) -> ProductOutSchema:
-    product = await ProductDAO.update_product(db=db, product_data=product_data, product=product)
+    product = await ProductDAO.update_product(db=db, user=user, product_data=product_data, product=product)
+
     return ProductOutSchema.model_validate(product)
 
 
 @router.patch('/{slug}')
-async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
-                         product_data: ProductUpdateSchema,
-                         product: Annotated[Product, Depends(get_instance_by_slug(Product))],
-                         ) -> ProductOutSchema:
-    product = await ProductDAO.update_product(db=db, product_data=product_data, product=product)
+async def update_product_partition(db: Annotated[AsyncSession, Depends(get_db)],
+                                   user: Annotated[User, Depends(get_user_using_token)],
+                                   product_data: ProductUpdateSchema,
+                                   product: Annotated[Product, Depends(get_instance_by_slug(Product))],
+                                   ) -> ProductOutSchema:
+    product = await ProductDAO.update_product(db=db, user=user, product_data=product_data, product=product)
     return ProductOutSchema.model_validate(product)
 
 
 @router.delete('/{slug}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_products(db: Annotated[AsyncSession, Depends(get_db)],
+                          user: Annotated[User, Depends(get_user_using_token)],
                           product: Product = Depends(get_instance_by_slug(Product))) -> None:
-    await ProductDAO.delete(db=db, obj=product)
+    await ProductDAO.delete(db=db, user=user, obj=product)

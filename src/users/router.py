@@ -12,6 +12,7 @@ from src.users.models import User
 from src.users.schemas import UserRegisterSchema, UserOutSchema, TokenSchema
 
 router = APIRouter(prefix='/auth', tags=['authentication'])
+http_bearer = HTTPBearer()
 
 
 @router.post('/register', status_code=status.HTTP_201_CREATED)
@@ -32,10 +33,6 @@ async def login_user(db: Annotated[AsyncSession, Depends(get_db)],
     return TokenSchema(access_token=token)
 
 
-http_bearer = HTTPBearer()
-
-
 @router.get('/me')
 async def get_user_info(user: Annotated[User, Depends(get_user_using_token)]) -> UserOutSchema:
     return UserOutSchema.model_validate(user)
-

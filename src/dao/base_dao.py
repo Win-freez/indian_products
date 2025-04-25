@@ -2,6 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import Base
+from src.users import User
+from src.users.dependencies import check_is_admin
 
 
 class BaseDao:
@@ -38,6 +40,8 @@ class BaseDao:
         return list(result.scalars().all())
 
     @classmethod
-    async def delete(cls, db: AsyncSession, obj: model) -> None:
+    async def delete(cls, db: AsyncSession, obj: model, user: None | User = None) -> None:
+        if user:
+            check_is_admin(user)
         await db.delete(obj)
         await db.commit()

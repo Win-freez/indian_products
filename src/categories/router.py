@@ -1,14 +1,15 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status, HTTPException, Response
-from sqlalchemy import select, delete
+from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.categories.schemas import CategorySchema, CategoryOutSchema
-from src.categories.models import Category
-from src.database import get_db
 from src.categories.dao import CategoryDAO
-from src.dependecies.dependencies import check_unique_slug, get_instance_by_slug
+from src.categories.models import Category
+from src.categories.schemas import CategorySchema, CategoryOutSchema
+from src.database import get_db
+from src.dependecies.dependencies import get_instance_by_slug
+from src.users.dependencies import get_user_using_token, check_is_admin
+from src.users.models import User
 
 router = APIRouter(prefix='/categories', tags=['category'])
 
@@ -21,9 +22,10 @@ async def get_all_categories(db: Annotated[AsyncSession, Depends(get_db)]) -> li
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_category(db: Annotated[AsyncSession, Depends(get_db)],
+                          user: Annotated[User, Depends(get_user_using_token)],
                           new_category: CategorySchema,
                           response: Response) -> CategoryOutSchema:
-    new_category = await CategoryDAO.create_category(db=db, new_category=new_category)
+    new_category = await CategoryDAO.create_category(db=db, user=user, new_category=new_category)
 
     response.headers['Location'] = f"/{router.prefix}/{new_category.slug}"
 
@@ -32,13 +34,15 @@ async def create_category(db: Annotated[AsyncSession, Depends(get_db)],
 
 @router.put('/{slug}', status_code=status.HTTP_200_OK)
 async def update_category(db: Annotated[AsyncSession, Depends(get_db)],
+                          user: Annotated[User, Depends(get_user_using_token)],
                           category: Annotated[Category, Depends(get_instance_by_slug(Category))],
                           category_data: CategorySchema) -> CategoryOutSchema:
-    category = await CategoryDAO.update_category(db=db, category=category, category_data=category_data)
+    category = await CategoryDAO.update_category(db=db, user=user, category=category, category_data=category_data)
     return CategoryOutSchema.model_validate(category)
 
 
 @router.delete('/{slug}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(db: Annotated[AsyncSession, Depends(get_db)],
+                          user: Annotated[User, Depends(get_user_using_token)],
                           category: Annotated[Category, Depends(get_instance_by_slug(Category))]) -> None:
-    await CategoryDAO.delete(db=db, obj=category)
+    await CategoryDAO.delete(db=db, user=user, obj=category)

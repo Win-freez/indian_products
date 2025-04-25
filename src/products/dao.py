@@ -7,13 +7,17 @@ from src.dao.base_dao import BaseDao
 from src.dependecies.dependencies import check_unique_slug
 from src.products.models import Product
 from src.products.schemas import ProductSchema, ProductFilters, ProductUpdateSchema
+from src.users.models import User
 
 
 class ProductDAO(BaseDao):
     model = Product
 
     @classmethod
-    async def create_product(cls, db: AsyncSession, new_product: ProductSchema) -> Product:
+    async def create_product(cls, db: AsyncSession, user: User, new_product: ProductSchema) -> Product:
+        if not user.is_admin:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="You can't create product. Only admin has permissions.")
         slug = await check_unique_slug(name=new_product.name, model=cls.model, db=db)
         product = await cls.create(db=db, **new_product.model_dump(), slug=slug)
         return product
@@ -61,8 +65,14 @@ class ProductDAO(BaseDao):
         return list(products)
 
     @classmethod
-    async def update_product(cls, db: AsyncSession, product_data: ProductSchema | ProductUpdateSchema,
+    async def update_product(cls,
+                             db: AsyncSession,
+                             user: User,
+                             product_data: ProductSchema | ProductUpdateSchema,
                              product: Product) -> Product:
+        if not user.is_admin:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="You can't update product. Only admin has permissions.")
 
         data = product_data.model_dump(exclude_unset=True)
 
