@@ -8,7 +8,7 @@ from src.dependecies.dependencies import get_instance_by_slug
 from src.products.dao import ProductDAO
 from src.products.models import Product
 from src.products.schemas import ProductSchema, ProductOutSchema, ProductFilters, ProductUpdateSchema
-from src.users.dependencies import get_user_using_token
+from src.users.dependencies import get_user_using_token, check_user_is_admin
 from src.users.models import User
 
 router = APIRouter(prefix='/products', tags=['products'])
@@ -30,7 +30,7 @@ async def get_product(
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_product(db: Annotated[AsyncSession, Depends(get_db)],
-                         user: Annotated[User, Depends(get_user_using_token)],
+                         user: Annotated[User, Depends(check_user_is_admin)],
                          new_product: ProductSchema,
                          response: Response) -> ProductOutSchema:
     product = await ProductDAO.create_product(db, user, new_product)
@@ -41,8 +41,8 @@ async def create_product(db: Annotated[AsyncSession, Depends(get_db)],
 
 @router.get('/category/{slug}', status_code=status.HTTP_200_OK)
 async def product_by_category(db: Annotated[AsyncSession, Depends(get_db)],
-                              category_slug: str) -> list[ProductOutSchema]:
-    products = await ProductDAO.get_product_by_category(db=db, category_slug=category_slug)
+                              slug: str) -> list[ProductOutSchema]:
+    products = await ProductDAO.get_product_by_category(db=db, category_slug=slug)
 
     return [ProductOutSchema.model_validate(product) for product in products]
 
@@ -57,7 +57,7 @@ async def filter_products(db: Annotated[AsyncSession, Depends(get_db)],
 
 @router.put('/{slug}')
 async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
-                         user: Annotated[User, Depends()],
+                         user: Annotated[User, Depends(check_user_is_admin)],
                          product_data: Annotated[ProductSchema, Body()],
                          product: Annotated[Product, Depends(get_instance_by_slug(Product))],
                          ) -> ProductOutSchema:
@@ -68,7 +68,7 @@ async def update_product(db: Annotated[AsyncSession, Depends(get_db)],
 
 @router.patch('/{slug}')
 async def update_product_partition(db: Annotated[AsyncSession, Depends(get_db)],
-                                   user: Annotated[User, Depends(get_user_using_token)],
+                                   user: Annotated[User, Depends(check_user_is_admin)],
                                    product_data: ProductUpdateSchema,
                                    product: Annotated[Product, Depends(get_instance_by_slug(Product))],
                                    ) -> ProductOutSchema:
@@ -78,6 +78,6 @@ async def update_product_partition(db: Annotated[AsyncSession, Depends(get_db)],
 
 @router.delete('/{slug}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_products(db: Annotated[AsyncSession, Depends(get_db)],
-                          user: Annotated[User, Depends(get_user_using_token)],
+                          user: Annotated[User, Depends(check_user_is_admin)],
                           product: Product = Depends(get_instance_by_slug(Product))) -> None:
-    await ProductDAO.delete(db=db, user=user, obj=product)
+    await ProductDAO.delete(db=db, obj=product)

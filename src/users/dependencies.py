@@ -45,7 +45,7 @@ async def get_user_using_token(db: Annotated[AsyncSession, Depends(get_db)],
     return user
 
 
-def check_is_admin(user: User) -> User:
+def check_user_is_admin(user: User = Depends(get_user_using_token)) -> User:
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Not allowed. Only admin has access')
     return user
