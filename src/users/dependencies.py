@@ -1,30 +1,25 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import HTTPException, status, Depends, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import HTTPException, status, Depends, Request
 from jwt import PyJWTError
-from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
-from src.users.auth import validate_password, decode_jwt
+from src.users.auth import decode_jwt
 from src.users.dao import UserDao
 from src.users.models import User
 
-Oauth2_scheme = OAuth2PasswordBearer(tokenUrl=r'/auth/login')
 
-
-async def validate_user(db: Annotated[AsyncSession, Depends(get_db)],
-                        form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> User:
-    user = await UserDao.get_user_by_email(db, user_email=form_data.username)
-    if not user or validate_password(form_data.password, user.hashed_password) is False:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Wrong email or password')
-    return user
+def get_access_token(request: Request) -> str:
+    token = request.cookies.get('access_token')
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token not found')
+    return token
 
 
 async def get_user_using_token(db: Annotated[AsyncSession, Depends(get_db)],
-                               token: Annotated[str, Depends(Oauth2_scheme)]):
+                               token: Annotated[str, Depends(get_access_token)]):
     try:
         payload = decode_jwt(token)
     except PyJWTError:
@@ -39,6 +34,7 @@ async def get_user_using_token(db: Annotated[AsyncSession, Depends(get_db)],
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User ID not found in Access token')
 
     user = await UserDao.get_user_by_id(db, int(user_id))
+
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
 

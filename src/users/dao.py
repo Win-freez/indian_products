@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.users.models import User
 from src.users.schemas import UserRegisterSchema
-from src.users.auth import hash_password
-
+from src.users.auth import hash_password, validate_password
 
 class UserDao:
 
@@ -43,3 +42,17 @@ class UserDao:
         await db.refresh(user)
 
         return user
+
+    @classmethod
+    async def validate_user(cls,
+                            db: AsyncSession,
+                            email: EmailStr,
+                            password: str) -> User:
+
+        user = await UserDao.get_user_by_email(db=db, user_email=email)
+
+        if not user or validate_password(password, user.hashed_password) is False:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Wrong email or password')
+
+        return user
+

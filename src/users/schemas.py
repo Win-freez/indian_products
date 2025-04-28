@@ -39,8 +39,3 @@ class UserOutSchema(BaseModel):
                            description="Фамилия, от 2 до 50 символов", examples=['Смирнов'])
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class TokenSchema(BaseModel):
-    access_token: str
-    token_type: str = 'bearer'
