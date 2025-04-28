@@ -9,7 +9,7 @@ from src.database import Base
 
 
 class Product(Base):
-    __tablename__ = 'products'
+    __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -19,8 +19,13 @@ class Product(Base):
     image_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     stock: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     rating: Mapped[float] = mapped_column(Float, nullable=True, default=0.0)
-    category_id: Mapped[Optional[int]] = mapped_column(ForeignKey('categories.id', ondelete='SET NULL'), nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text('TRUE'))
+    category_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=text("TRUE")
+    )
 
-    category: Mapped['Category'] = relationship('Category', back_populates='products', passive_deletes=True)
-
+    category: Mapped["Category"] = relationship(
+        "Category", back_populates="products", passive_deletes=True
+    )

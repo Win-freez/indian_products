@@ -24,20 +24,20 @@ class Settings(BaseSettings):
             "uq": "uq_%(table_name)s_%(column_0_name)s",
             "ck": "ck_%(table_name)s_%(constraint_name)s",
             "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-            "pk": "pk_%(table_name)s"
+            "pk": "pk_%(table_name)s",
         }
 
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        env_file=BASE_DIR / '.env',
-        env_file_encoding='utf-8',
+        env_file=BASE_DIR / ".env",
+        env_file_encoding="utf-8",
     )
 
 
 class AuthJWT(BaseModel):
-    private_key_path: Path = BASE_DIR / 'certificates' / 'jwt-private.pem'
-    public_key_path: Path = BASE_DIR / 'certificates' / 'jwt-public.pem'
-    algorithm: str = 'RS256'
+    private_key_path: Path = BASE_DIR / "certificates" / "jwt-private.pem"
+    public_key_path: Path = BASE_DIR / "certificates" / "jwt-public.pem"
+    algorithm: str = "RS256"
     access_token_expire_minutes: int = 30
 
 

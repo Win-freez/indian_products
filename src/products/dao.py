@@ -14,38 +14,45 @@ class ProductDAO(BaseDao):
     model = Product
 
     @classmethod
-    async def create_product(cls, db: AsyncSession, user: User, new_product: ProductSchema) -> Product:
+    async def create_product(
+        cls, db: AsyncSession, user: User, new_product: ProductSchema
+    ) -> Product:
         if not user.is_admin:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail="You can't create product. Only admin has permissions.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can't create product. Only admin has permissions.",
+            )
         slug = await check_unique_slug(name=new_product.name, model=cls.model, db=db)
         product = await cls.create(db=db, **new_product.model_dump(), slug=slug)
         return product
 
     @classmethod
-    async def get_product_by_category(cls, db: AsyncSession, category_slug: str) -> list[Product]:
+    async def get_product_by_category(
+        cls, db: AsyncSession, category_slug: str
+    ) -> list[Product]:
         stmt = select(Category).where(Category.slug == category_slug)
         result = await db.execute(stmt)
         category = result.scalar_one_or_none()
 
         if category is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+            )
 
-        stmt = (
-            select(Product)
-            .where(Product.category_id == category.id)
-        )
+        stmt = select(Product).where(Product.category_id == category.id)
         result = await db.execute(stmt)
         products = result.scalars().all()
 
         return list(products)
 
     @classmethod
-    async def get_filtered_products(cls, db: AsyncSession, product_filters: ProductFilters) -> list[Product]:
+    async def get_filtered_products(
+        cls, db: AsyncSession, product_filters: ProductFilters
+    ) -> list[Product]:
         stmt = select(Product).join(Category, Product.category_id == Category.id)
 
         if product_filters.name:
-            stmt = stmt.where(Product.name.ilike(f'%{product_filters.name}%'))
+            stmt = stmt.where(Product.name.ilike(f"%{product_filters.name}%"))
         if product_filters.min_price:
             stmt = stmt.where(Product.price >= product_filters.min_price)
         if product_filters.max_price:
@@ -65,19 +72,25 @@ class ProductDAO(BaseDao):
         return list(products)
 
     @classmethod
-    async def update_product(cls,
-                             db: AsyncSession,
-                             user: User,
-                             product_data: ProductSchema | ProductUpdateSchema,
-                             product: Product) -> Product:
+    async def update_product(
+        cls,
+        db: AsyncSession,
+        user: User,
+        product_data: ProductSchema | ProductUpdateSchema,
+        product: Product,
+    ) -> Product:
         if not user.is_admin:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail="You can't update product. Only admin has permissions.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can't update product. Only admin has permissions.",
+            )
 
         data = product_data.model_dump(exclude_unset=True)
 
-        if 'name' in data and data['name'] != product.name:
-            data['slug'] = await check_unique_slug(db=db, model=cls.model, name=data['name'])
+        if "name" in data and data["name"] != product.name:
+            data["slug"] = await check_unique_slug(
+                db=db, model=cls.model, name=data["name"]
+            )
 
         updated_product = await cls.update(db=db, instance=product, **data)
 

@@ -14,11 +14,10 @@ app.include_router(product_router)
 app.include_router(order_router)
 
 
-
-@app.get('/')
+@app.get("/")
 async def welcome():
-    return {'message': 'start page'}
+    return {"message": "start page"}
 
 
 if __name__ == "__main__":
-    uvicorn.run('src.main:app', host='localhost', port=8000, reload=True)
+    uvicorn.run("src.main:app", host="localhost", port=8000, reload=True)
