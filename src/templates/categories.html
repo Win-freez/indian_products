@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Категории товаров{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-indigo">Категории товаров</h1>
+        {% if user and user.is_admin %}
+        <button class="btn btn-saffron" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+            <i class="bi bi-plus-lg"></i> Добавить категорию
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for category in categories %}
+        <div class="col">
+            <div class="card h-100 border-indigo">
+                <div class="card-header bg-white">
+                    <h5 class="card-title text-indigo mb-0">{{ category.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">{{ category.description or "Нет описания" }}</p>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-flex justify-content-between">
+                        <a href="/products?category_slug={{ category.slug }}" class="btn btn-green btn-sm">
+                            Показать товары
+                        </a>
+                        {% if user and user.is_admin %}
+                        <div class="btn-group">
+                            <button class="btn btn-outline-indigo btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editCategoryModal"
+                                    data-category-id="{{ category.id }}"
+                                    data-category-name="{{ category.name }}"
+                                    data-category-description="{{ category.description or '' }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-saffron btn-sm"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteCategoryModal"
+                                    data-category-id="{{ category.id }}"
+                                    data-category-name="{{ category.name }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Модальное окно создания категории -->
+<div class="modal fade" id="createCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/categories/" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить категорию</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="categoryName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoryDescription" class="form-label">Описание</label>
+                        <textarea class="form-control" id="categoryDescription" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования категории -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="editCategoryForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать категорию</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editCategoryName" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="editCategoryName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCategoryDescription" class="form-label">Описание</label>
+                        <textarea class="form-control" id="editCategoryDescription" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно удаления категории -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Удаление категории</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить категорию <strong id="deleteCategoryName"></strong>?</p>
+                <p class="text-danger">Все товары в этой категории останутся без категории!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form method="post" id="deleteCategoryForm">
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Обработчики для модальных окон
+document.addEventListener('DOMContentLoaded', function() {
+    // Редактирование категории
+    const editModal = document.getElementById('editCategoryModal');
+    editModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const id = button.getAttribute('data-category-id');
+        const name = button.getAttribute('data-category-name');
+        const description = button.getAttribute('data-category-description');
+        
+        document.getElementById('editCategoryName').value = name;
+        document.getElementById('editCategoryDescription').value = description;
+        document.getElementById('editCategoryForm').action = `/categories/${id}`;
+        document.getElementById('editCategoryForm').setAttribute('method', 'put');
+    });
+    
+    // Удаление категории
+    const deleteModal = document.getElementById('deleteCategoryModal');
+    deleteModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const id = button.getAttribute('data-category-id');
+        const name = button.getAttribute('data-category-name');
+        
+        document.getElementById('deleteCategoryName').textContent = name;
+        document.getElementById('deleteCategoryForm').action = `/categories/${id}`;
+        document.getElementById('deleteCategoryForm').setAttribute('method', 'delete');
+    });
+});
+</script>
+{% endblock %}
