@@ -51,7 +51,7 @@ async def create_product(
     return ProductOutSchema.model_validate(product)
 
 
-@router.get("/category/{slug}", status_code=status.HTTP_200_OK)
+@router.get("/categories/{slug}", status_code=status.HTTP_200_OK)
 async def product_by_category(
     db: Annotated[AsyncSession, Depends(get_db)], slug: str
 ) -> list[ProductOutSchema]:
@@ -60,7 +60,7 @@ async def product_by_category(
     return [ProductOutSchema.model_validate(product) for product in products]
 
 
-@router.get("/products/filter", status_code=status.HTTP_200_OK)
+@router.get("/filter", status_code=status.HTTP_200_OK)
 async def filter_products(
     db: Annotated[AsyncSession, Depends(get_db)],
     product_filters: ProductFilters = Depends(),

@@ -48,7 +48,7 @@ class ProductDAO(BaseDao):
                 status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
             )
 
-        stmt = select(Product).where(Product.category_id == category.id)
+        stmt = select(Product).options(joinedload(Product.category)).where(Product.category_id == category.id)
         result = await db.execute(stmt)
         products = result.scalars().all()
 
@@ -58,7 +58,7 @@ class ProductDAO(BaseDao):
     async def get_filtered_products(
         cls, db: AsyncSession, product_filters: ProductFilters
     ) -> list[Product]:
-        stmt = select(Product).join(Category, Product.category_id == Category.id)
+        stmt = select(Product).options(joinedload(Product.category))
 
         if product_filters.name:
             stmt = stmt.where(Product.name.ilike(f"%{product_filters.name}%"))
@@ -67,7 +67,7 @@ class ProductDAO(BaseDao):
         if product_filters.max_price:
             stmt = stmt.where(Product.price <= product_filters.max_price)
         if product_filters.category_slug:
-            stmt = stmt.where(Category.slug == product_filters.category_slug)
+            stmt = stmt.where(Product.category.slug == product_filters.category_slug)
         if product_filters.in_stock is not None:
             stmt = stmt.where(Product.stock > 0)
         if product_filters.is_active is not None:
