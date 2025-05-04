@@ -1,20 +1,27 @@
-from typing import Type
+from typing import Type, Callable
 
 from fastapi import HTTPException, status, Path, Depends
 from slugify import slugify
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload, joinedload, subqueryload
 
 from src.database import Base
 from src.database import get_db
 
 
-def get_instance_by_slug(model: Type[Base]):
+def get_instance_by_slug(model: Type[Base],
+                         load_strategy: Callable | None = None,
+                         relationship: str | None = None):
     async def dependency(
         slug: str = Path(..., description="Slug объекта"),
         db: AsyncSession = Depends(get_db),
     ):
+
         stmt = select(model).where(model.slug == slug)
+        if load_strategy and relationship:
+            stmt = stmt.options(load_strategy(getattr(model, relationship)))
+
         result = await db.execute(stmt)
         instance = result.scalar_one_or_none()
 

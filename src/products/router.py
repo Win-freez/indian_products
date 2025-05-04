@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, status, Depends, Response, Body
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from src.database import get_db
 from src.dependecies.dependencies import get_instance_by_slug
@@ -13,14 +14,14 @@ from src.products.schemas import (
     ProductFilters,
     ProductUpdateSchema,
 )
-from src.users.dependencies import get_user_using_token, check_user_is_admin
+from src.users.dependencies import check_user_is_admin
 from src.users.models import User
 
 router = APIRouter(prefix="/products", tags=["products"])
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def all_products(
+async def get_all_products(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> list[ProductOutSchema]:
     products = await ProductDAO.get_all(db)
@@ -30,7 +31,9 @@ async def all_products(
 @router.get("/{slug}", status_code=status.HTTP_200_OK)
 async def get_product(
     db: Annotated[AsyncSession, Depends(get_db)],
-    product: Annotated[Product, Depends(get_instance_by_slug(Product))],
+    product: Annotated[Product, Depends(get_instance_by_slug(model=Product,
+                                                             load_strategy=joinedload,
+                                                             relationship='category'))],
 ) -> ProductOutSchema:
     return ProductOutSchema.model_validate(product)
 

@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.categories.models import Category
@@ -12,6 +13,14 @@ from src.users.models import User
 
 class ProductDAO(BaseDao):
     model = Product
+
+    @classmethod
+    async def get_all(cls, db: AsyncSession) -> list[Product]:
+        stmt = select(Product).options(joinedload(Product.category)).order_by(Product.name)
+        result = await db.execute(stmt)
+        products = result.scalars().all()
+        return list(products)
+        
 
     @classmethod
     async def create_product(

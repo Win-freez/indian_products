@@ -1,9 +1,11 @@
-from typing import Annotated, Optional
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Annotated, Optional
 
 from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
+
+from src.categories.schemas import CategoryOutSchema
 
 
 class ProductSchema(BaseModel):
@@ -32,7 +34,7 @@ class ProductOutSchema(ProductSchema):
     updated_at: Annotated[
         Optional[datetime], Field(default=None, title="Дата обновления")
     ]
-
+    category: Annotated[CategoryOutSchema, Field(title="Категория")]
     model_config = ConfigDict(from_attributes=True)
 
 

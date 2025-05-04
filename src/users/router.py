@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, status, Depends, Response, Form, Path
+from fastapi import APIRouter, status, Depends, Response, Form, Path, Header
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(
-    db: Annotated[AsyncSession, Depends(get_db)], user_data: UserRegisterSchema
+        db: Annotated[AsyncSession, Depends(get_db)], user_data: UserRegisterSchema
 ) -> dict:
     user = await UserDao.create_user(db, user_data)
 
@@ -28,10 +28,10 @@ async def register_user(
 
 @router.post("/login")
 async def login_user(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    email: Annotated[EmailStr, Form()],
-    password: Annotated[str, Form()],
-    response: Response,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        email: Annotated[EmailStr, Form()],
+        password: Annotated[str, Form()],
+        response: Response,
 ) -> dict:
     user = await UserDao.validate_user(db=db, email=email, password=password)
 
@@ -47,7 +47,8 @@ async def login_user(
 
 @router.post("/logout")
 async def logout_user(
-    user: Annotated[User, Depends(get_user_using_token)], response: Response
+        user: Annotated[User, Depends(get_user_using_token)],
+        response: Response
 ) -> dict:
     response.delete_cookie("access_token", httponly=True, secure=True, samesite="lax")
     return {"message": f"User successfully logout"}
@@ -55,16 +56,16 @@ async def logout_user(
 
 @router.get("/me")
 async def get_user_info(
-    user: Annotated[User, Depends(get_user_using_token)],
+        user: Annotated[User, Depends(get_user_using_token)],
 ) -> UserOutSchema:
     return UserOutSchema.model_validate(user)
 
 
 @router.post("/set-admin/{user_id}")
 async def set_admin(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(check_user_is_admin)],
-    user_id: int = Path(gt=0),
+        db: Annotated[AsyncSession, Depends(get_db)],
+        user: Annotated[User, Depends(check_user_is_admin)],
+        user_id: int = Path(gt=0),
 ) -> dict:
     user_to_update = await UserDao.set_admin(db=db, user=user, user_id=user_id)
 
