@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, status, Depends, Response, Form, Path, Header
+from fastapi.responses import RedirectResponse
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +27,7 @@ async def register_user(
     }
 
 
-@router.post("/login")
+@router.post("/login", status_code=status.HTTP_200_OK)
 async def login_user(
         db: Annotated[AsyncSession, Depends(get_db)],
         email: Annotated[EmailStr, Form()],
@@ -42,26 +43,27 @@ async def login_user(
         key="access_token", value=token, httponly=True, secure=True, samesite="lax"
     )
 
-    return {"ok": True, "message": "Авторизация успешна!"}
+    return {"ok": True, "message": "Авторизация успешна!", "access_token": token}
 
 
-@router.post("/logout")
+@router.post("/logout", status_code=status.HTTP_303_SEE_OTHER)
 async def logout_user(
         user: Annotated[User, Depends(get_user_using_token)],
         response: Response
-) -> dict:
+) -> Response:
+    response = RedirectResponse(url="/pages/", status_code=303)
     response.delete_cookie("access_token", httponly=True, secure=True, samesite="lax")
-    return {"message": f"User successfully logout"}
+    return response
 
 
-@router.get("/me")
+@router.get("/me", status_code=status.HTTP_200_OK)
 async def get_user_info(
         user: Annotated[User, Depends(get_user_using_token)],
 ) -> UserOutSchema:
     return UserOutSchema.model_validate(user)
 
 
-@router.post("/set-admin/{user_id}")
+@router.post("/set-admin/{user_id}", status_code=status.HTTP_200_OK)
 async def set_admin(
         db: Annotated[AsyncSession, Depends(get_db)],
         user: Annotated[User, Depends(check_user_is_admin)],

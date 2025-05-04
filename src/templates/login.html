@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-green">Вход в аккаунт</h2>
+    <form id="login-form">
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password" class="form-control" id="password" required>
+        </div>
+        <button type="submit" class="btn btn-green">Войти</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("login-form").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append("email", document.getElementById("email").value);
+    formData.append("password", document.getElementById("password").value);
+
+    try {
+        const response = await fetch("/auth/login", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(result.message || "Успешный вход!");
+            window.location.href = "/pages/profile";  // предположим, у тебя есть профиль
+        } else {
+            alert(result.message || "Неверный email или пароль");
+        }
+    } catch (error) {
+        console.error("Ошибка:", error);
+        alert("Ошибка при авторизации");
+    }
+});
+</script>
+{% endblock %}

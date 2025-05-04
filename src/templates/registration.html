@@ -1,102 +1,137 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Индийские Товары - Аутентификация</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/registration.css">
-</head>
-<body>
-    <!-- SVG Logo/Icon -->
-    <div class="logo-container">
-         <!-- Simple Buddha SVG -->
-         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="60" height="60" fill="currentColor" stroke="none">
-            <!-- Basic Head Shape -->
-            <circle cx="50" cy="35" r="18"/>
-            <!-- Ushnisha (Top Knot) -->
-            <ellipse cx="50" cy="18" rx="8" ry="5"/>
-            <!-- Elongated Earlobes -->
-            <path d="M32 38 Q 28 50 32 60"/>
-            <path d="M68 38 Q 72 50 68 60"/>
-            <!-- Body/Shoulders Outline -->
-            <path d="M25 70 Q 20 85 50 90 Q 80 85 75 70 Z"/>
-            <!-- Subtle Smile/Mouth Line -->
-            <path d="M43 45 Q 50 50 57 45" fill="none" stroke="#fff" stroke-width="1.5"/>
-            <!-- Eyes (dots or simple lines) -->
-            <circle cx="42" cy="35" r="1.5" fill="#fff"/>
-            <circle cx="58" cy="35" r="1.5" fill="#fff"/>
-        </svg>
-        <h1>Индийские Товары</h1>
-    </div>
+{% extends "base.html" %}
 
-    <div id="auth-container">
-        <h2 id="auth-title">Добро пожаловать!</h2>
+{% block title %}Вход и регистрация{% endblock %}
 
-        <div id="message-area" class="message"></div>
+{% block content %}
+<div class="container mt-5">
+    <h2>Добро пожаловать!</h2>
+    <p>Пожалуйста, войдите или зарегистрируйтесь, чтобы продолжить.</p>
 
-        <!-- Registration Form -->
-        <div id="register-section">
-            <h2>Регистрация</h2>
-            <form id="register-form">
-                <label for="reg-email">Email:</label>
-                <input type="email" id="reg-email" name="email" required>
+    <!-- Вкладки для выбора формы входа или регистрации -->
+    <ul class="nav nav-tabs" id="authTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="login-tab" data-bs-toggle="tab" href="#login" role="tab" aria-controls="login" aria-selected="true">Войти</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="register-tab" data-bs-toggle="tab" href="#register" role="tab" aria-controls="register" aria-selected="false">Регистрация</a>
+        </li>
+    </ul>
 
-                <label for="reg-password">Пароль (мин. 5 символов):</label>
-                <input type="password" id="reg-password" name="password" required minlength="5" maxlength="50">
-
-                <label for="reg-phone">Телефон (например, +79005003030):</label>
-                <input type="tel" id="reg-phone" name="phone_number" required pattern="^\+\d{5,15}$" placeholder="+79005003030">
-
-                <label for="reg-first-name">Имя:</label>
-                <input type="text" id="reg-first-name" name="first_name" required minlength="2" maxlength="50" pattern="^[А-Яа-яA-Za-z\-]+$">
-
-                <label for="reg-last-name">Фамилия:</label>
-                <input type="text" id="reg-last-name" name="last_name" required minlength="2" maxlength="50" pattern="^[А-Яа-яA-Za-z\-]+$">
-
-                <button type="submit">Зарегистрироваться</button>
+    <div class="tab-content mt-3" id="authTabContent">
+        <!-- Форма входа -->
+        <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
+            <form id="loginForm" method="POST">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Пароль</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Войти</button>
             </form>
-            <p>Уже есть аккаунт? <a href="#" id="show-login">Войти</a></p>
         </div>
 
-        <!-- Login Form -->
-        <div id="login-section" style="display: none;">
-            <h2>Вход</h2>
-            <form id="login-form">
-                <label for="login-email">Email:</label>
-                <input type="email" id="login-email" name="email" required>
-
-                <label for="login-password">Пароль:</label>
-                <input type="password" id="login-password" name="password" required minlength="5" maxlength="50">
-
-                <button type="submit">Войти</button>
+        <!-- Форма регистрации -->
+        <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
+            <form id="registerForm" method="POST">
+                <div class="mb-3">
+                    <label for="reg_email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="reg_email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="first_name" class="form-label">Имя</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="last_name" class="form-label">Фамилия</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password_reg" class="form-label">Пароль</label>
+                    <input type="password" class="form-control" id="password_reg" name="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phone_number" class="form-label">Номер телефона</label>
+                    <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                </div>
+                <button type="submit" class="btn btn-success">Зарегистрироваться</button>
             </form>
-             <p>Нет аккаунта? <a href="#" id="show-register">Зарегистрироваться</a></p>
         </div>
     </div>
+</div>
 
-    <div id="user-info-container" style="display: none;">
-        <h2>Личный кабинет</h2>
-        <div id="user-details">
-            <p><strong>Email:</strong> <span id="user-email"></span></p>
-            <p><strong>Имя:</strong> <span id="user-first-name"></span></p>
-            <p><strong>Фамилия:</strong> <span id="user-last-name"></span></p>
-            <p><strong>Телефон:</strong> <span id="user-phone"></span></p>
-        </div>
-        <button id="logout-button">Выйти</button>
-        <button id="refresh-user-info">Обновить информацию</button>
-         <div id="admin-section" style="display: none;">
-             <h3>Admin Panel</h3>
-             <form id="set-admin-form">
-                 <label for="admin-user-id">User ID для установки/снятия админа:</label>
-                 <input type="number" id="admin-user-id" name="user_id" required min="1">
-                 <button type="submit">Сделать админом/Пользователем</button>
-             </form>
-         </div>
-    </div>
+<script>
+   // Обработка формы входа
+   document.getElementById('loginForm').addEventListener('submit', function(event) {
+       event.preventDefault();  // Останавливаем стандартное поведение формы
 
-    <script src="/static/js/registration.js"></script>
-</body>
-</html>
+       const email = document.getElementById('email').value;
+       const password = document.getElementById('password').value;
+
+       const formData = new URLSearchParams();
+       formData.append('email', email);
+       formData.append('password', password);
+
+       // Отправляем запрос на сервер
+       fetch('/auth/login', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/x-www-form-urlencoded' // Отправляем как форму
+           },
+           body: formData.toString()  // Преобразуем в строку формата x-www-form-urlencoded
+       })
+       .then(response => response.json())
+       .then(data => {
+           if (data.access_token) {
+               // Сохраняем токен в localStorage
+               localStorage.setItem("access_token", data.access_token);
+
+               // Перенаправляем на главную страницу
+               window.location.href = "/pages";  // Главная страница
+           } else {
+               alert("Неверный email или пароль");
+           }
+       })
+       .catch(error => {
+           console.error("Ошибка:", error);
+       });
+   });
+
+   // Обработка формы регистрации
+   document.getElementById('registerForm').addEventListener('submit', function(event) {
+       event.preventDefault();  // Останавливаем стандартное поведение формы
+
+       const formData = {
+           email: document.getElementById('reg_email').value,
+           password: document.getElementById('password_reg').value,
+           phone_number: document.getElementById('phone_number').value,
+           first_name: document.getElementById('first_name').value,
+           last_name: document.getElementById('last_name').value
+       };
+
+       // Отправляем данные в формате JSON
+       fetch('/auth/register', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json'
+           },
+           body: JSON.stringify(formData)  // Отправляем данные как JSON
+       })
+       .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            alert("Регистрация прошла успешно!");
+            window.location.href = "/";  // Редирект на главную страницу
+        } else {
+            alert("Ошибка регистрации: " + data.message || "Неизвестная ошибка");
+        }
+    })
+    .catch(error => {
+        console.error("Ошибка:", error);
+        alert("Ошибка при отправке запроса. Пожалуйста, попробуйте снова.");
+    });
+});
+</script>
+{% endblock %}

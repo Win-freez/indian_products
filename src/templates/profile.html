@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-green rounded-4">
+                <div class="card-body">
+                    <h2 class="text-green mb-4">Профиль пользователя</h2>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Имя:</div>
+                        <div class="col-sm-8 fw-semibold">{{ user.first_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Фамилия:</div>
+                        <div class="col-sm-8 fw-semibold">{{ user.last_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Email:</div>
+                        <div class="col-sm-8 fw-semibold">{{ user.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Телефон:</div>
+                        <div class="col-sm-8 fw-semibold">{{ user.phone_number }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Роль:</div>
+                        <div class="col-sm-8">
+                            {% if user.is_admin %}
+                            <span class="badge bg-success">Администратор</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Пользователь</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+                    <form action="/auth/logout" method="post">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-box-arrow-right"></i> Выйти
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
