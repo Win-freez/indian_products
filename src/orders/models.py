@@ -8,9 +8,9 @@ from src.database import Base
 
 
 class OrderEnum(enum.Enum):
-    pending = "pending"
-    completed = "completed"
-    cancelled = "cancelled"
+    pending = "оформлен"
+    completed = "выполнен"
+    cancelled = "отменен"
 
 
 class Order(Base):

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
 from src.orders.dao import OrderDAO
-from src.orders.schemas import OrderCreateSchema, OrderOutSchema
+from src.orders.schemas import OrderCreateSchema, OrderOutSchema, OrderShortOutSchema
 from src.users.models import User
 from src.users.dependencies import get_user_using_token
 
@@ -16,10 +16,10 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 async def get_orders(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User, Depends(get_user_using_token)],
-) -> list[OrderOutSchema]:
+) -> list[OrderShortOutSchema]:
     orders = await OrderDAO.get_all_order(db=db, user=user)
 
-    return list(OrderOutSchema.model_validate(order) for order in orders)
+    return list(OrderShortOutSchema.model_validate(order) for order in orders)
 
 
 @router.get("/{object_id}", status_code=status.HTTP_200_OK)

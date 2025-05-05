@@ -3,7 +3,7 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 from sqlalchemy import select, update, case, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload, joinedload
 
 from src.dao.base_dao import BaseDao
 from src.orders.models import Order, OrderItem
@@ -17,11 +17,10 @@ class OrderDAO(BaseDao):
     @classmethod
     async def get_all_order(cls, db: AsyncSession, user: User) -> list[Order]:
         if user.is_admin:
-            stmt = select(Order).options(joinedload(Order.order_items))
+            stmt = select(Order)
         else:
             stmt = (
                 select(Order)
-                .options(joinedload(Order.order_items))
                 .where(Order.user_id == user.id)
             )
         result = await db.execute(stmt)
@@ -31,22 +30,22 @@ class OrderDAO(BaseDao):
 
     @classmethod
     async def get_user_order_by_id(
-        cls, db: AsyncSession, user: User, object_id: int
+            cls, db: AsyncSession,
+            user: User,
+            object_id: int
     ) -> Order:
         if user.is_admin:
-            stmt = (
-                select(Order)
-                .where(Order.id == object_id)
-                .options(joinedload(Order.order_items))
-            )
+            stmt = (select(Order)
+                    .where(Order.id == object_id)
+                    .options(selectinload(Order.order_items))
+                    )
         else:
-            stmt = (
-                select(Order)
-                .where(and_(Order.id == object_id, Order.user_id == user.id))
-                .options(joinedload(Order.order_items))
-            )
+            stmt = (select(Order)
+                    .where(and_(Order.id == object_id, Order.user_id == user.id))
+                    .options(selectinload(Order.order_items))
+                    )
         result = await db.execute(stmt)
-        order = result.unique().scalar_one_or_none()
+        order = result.scalar_one_or_none()
 
         if not order:
             raise HTTPException(
@@ -58,7 +57,7 @@ class OrderDAO(BaseDao):
 
     @classmethod
     async def create_order(
-        cls, db: AsyncSession, user: User, new_order: OrderCreateSchema
+            cls, db: AsyncSession, user: User, new_order: OrderCreateSchema
     ) -> Order:
 
         order = Order(

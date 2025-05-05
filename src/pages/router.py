@@ -14,6 +14,8 @@ from src.users.router import get_user_info, get_user_using_token
 from src.users.dependencies import get_access_token
 from src.users.models import User
 from src.database import get_db
+from src.orders.schemas import OrderOutSchema
+from src.orders.router import get_order, get_orders
 
 router = APIRouter(prefix='/pages', tags=['Frontend'])
 
@@ -74,3 +76,14 @@ async def show_profile(request: Request, db: Annotated[AsyncSession, Depends(get
             return templates.TemplateResponse("login.html", context={"request": request})
         else:
             raise e
+
+
+@router.get('/orders', response_class=HTMLResponse)
+async def show_orders(request: Request, orders: list[OrderOutSchema] = Depends(get_orders)):
+    return templates.TemplateResponse("orders.html", request=request, context={"request": request, "orders": orders})
+
+@router.get('/orders/{object_id}', response_class=HTMLResponse)
+async def show_order(request: Request, order: OrderOutSchema = Depends(get_order)):
+    return templates.TemplateResponse("order.html", request=request, context={"request": request,
+                                                                               "order": order})
+

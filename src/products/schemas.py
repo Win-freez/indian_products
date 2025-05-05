@@ -34,7 +34,7 @@ class ProductOutSchema(ProductSchema):
     updated_at: Annotated[
         Optional[datetime], Field(default=None, title="Дата обновления")
     ]
-    category: Annotated[CategoryOutSchema, Field(title="Категория")]
+    category: Annotated[CategoryOutSchema | None, Field(default=None, title="Категория")]
     model_config = ConfigDict(from_attributes=True)
 
 
