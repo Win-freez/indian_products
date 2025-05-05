@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Мои заказы{% endblock %}
+
+{% block content %}
+    <!-- Основной контент -->
+    <main class="container mb-5">
+        <h2 class="my-4">Ваши заказы</h2>
+
+        <!-- Контейнер для заказов -->
+        <div id="orders-container" class="row g-4">
+            <!-- Заказы будут отображаться здесь -->
+        </div>
+    </main>
+
+    <!-- Модальное окно для подтверждения отмены -->
+    <div class="modal" tabindex="-1" id="cancelOrderModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение отмены</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите отменить этот заказ? Это действие нельзя будет отменить.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+                    <button type="button" class="btn btn-danger" id="confirmCancelOrderBtn">Отменить заказ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orderIdToCancel = null;
+
+        // Функция для получения всех заказов
+        async function getOrders() {
+            try {
+                const response = await fetch('/orders/');
+                if (!response.ok) {
+                    throw new Error('Не удалось получить заказы');
+                }
+                const orders = await response.json();
+                displayOrders(orders);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Функция для отображения заказов
+        function displayOrders(orders) {
+            const ordersContainer = document.getElementById('orders-container');
+            ordersContainer.innerHTML = '';  // Очищаем контейнер перед добавлением новых данных
+
+            // Проверяем, если заказов нет
+            if (orders.length === 0) {
+                ordersContainer.innerHTML = '<p>У вас еще нет заказов.</p>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.classList.add('col-md-4');
+                orderCard.classList.add('order-card');
+
+                const formattedDate = new Date(order.created_at).toLocaleDateString('ru-RU'); // Форматируем дату
+
+                orderCard.innerHTML = `
+                    <div class="card shadow-sm border-indigo">
+                        <div class="card-header bg-saffron text-white">
+                            <h5 class="card-title">Заказ №${order.id}</h5>
+                            <small class="text-white">${formattedDate}</small>
+                        </div>
+                        <div class="card-body">
+                            <p class="order-status text-${getOrderStatusClass(order.status)}">
+                                <strong>Статус:</strong> ${order.status}
+                            </p>
+                            <div class="order-items">
+                                <!-- Здесь отображаем товары, если они есть -->
+                                ${order.order_items && order.order_items.length > 0 ? order.order_items.map(item => `
+                                    <div class="order-item">
+                                        <span>${item.product_name_snapshot} (x${item.quantity})</span>
+                                        <span>${parseFloat(item.price_at_time).toFixed(2)} ₽</span>
+                                    </div>
+                                `).join('') : '<p>Откройте для просмотра всех товаров.</p>'}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div>
+                                <strong>Сумма заказа: ${parseFloat(order.total_price).toFixed(2)} ₽</strong>
+                            </div>
+                            <div class="mt-3">
+                                <a href="/pages/orders/${order.id}" class="btn btn-warning">Подробнее</a>
+                                ${order.status === 'оформлен' ? `
+                                    <button class="btn btn-danger" onclick="showCancelOrderModal(${order.id})">Отменить</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                ordersContainer.appendChild(orderCard);
+            });
+        }
+
+        // Функция для получения статуса заказа
+        function getOrderStatusClass(status) {
+            switch (status) {
+                case 'оформлен':
+                    return 'warning';  // Желтый цвет для оформленных заказов
+                case 'выполнен':
+                    return 'success';  // Зеленый цвет для выполненных заказов
+                case 'отменен':
+                    return 'danger';  // Красный цвет для отмененных заказов
+                default:
+                    return 'secondary';  // Серый цвет для других статусов
+            }
+        }
+
+        // Функция для показа модального окна подтверждения отмены
+        function showCancelOrderModal(orderId) {
+            orderIdToCancel = orderId;  // Сохраняем ID заказа для отмены
+            const cancelOrderModal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+            cancelOrderModal.show();
+        }
+
+        // Функция для подтверждения отмены заказа
+        async function cancelOrder() {
+            try {
+                const response = await fetch(`/orders/${orderIdToCancel}/cancel`, {
+                    method: 'POST',
+                });
+                if (!response.ok) {
+                    throw new Error('Не удалось отменить заказ');
+                }
+                alert('Заказ отменён');
+                getOrders();  // Обновляем список заказов
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Обработчик для кнопки подтверждения отмены
+        document.getElementById('confirmCancelOrderBtn').addEventListener('click', cancelOrder);
+
+        // Получение всех заказов при загрузке страницы
+        getOrders();
+    </script>
+{% endblock %}
