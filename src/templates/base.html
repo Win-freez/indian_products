@@ -4,16 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Indian Products{% endblock %}</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
     <style>
         :root {
-            --indigo-green: #138808;  /* Зеленый из флага Индии */
-            --indigo-saffron: #FF9933;  /* Шафрановый */
-            --indigo-white: #FFFFFF;    /* Белый */
-            --indigo-blue: #000080;     /* Синий (для акцентов) */
+            --indigo-green: #138808;
+            --indigo-saffron: #FF9933;
+            --indigo-white: #FFFFFF;
+            --indigo-blue: #000080;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8f9fa; /* bg-light */
         }
 
         .bg-indigo { background-color: var(--indigo-green); }
@@ -59,7 +72,7 @@
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
     <!-- Навигация -->
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
@@ -82,16 +95,12 @@
                         <a class="nav-link active" href="/pages/categories">Категории</a>
                     </li>
                 </ul>
-                <!-- Корзина и Мои заказы в правом углу -->
                 <ul class="navbar-nav ms-auto">
-                    <!-- Мои заказы -->
-                    <!-- Корзина -->
-                      <li class="nav-item">
+                    <li class="nav-item">
                         <a class="nav-link" href="/pages/orders">
                             <i class="bi bi-bag-check"></i> Мои заказы
                         </a>
                     </li>
-                    <!-- Корзина -->
                     <li class="nav-item">
                         <a class="nav-link" href="/pages/cart">
                             <i class="bi bi-cart3"></i> Корзина
@@ -102,12 +111,13 @@
         </div>
     </nav>
 
-    <main class="container mb-5">
+    <!-- Контент -->
+    <main class="container mb-5 flex-grow-1">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Подвал с индийским флагом -->
-    <footer class="py-4 position-relative">
+    <!-- Футер -->
+    <footer class="py-4 mt-auto">
         <div class="container text-center text-white">
             <div class="flag-stripe" style="background-color: var(--indigo-saffron); height: 4px;"></div>
             <p class="mb-0 mt-3">
@@ -115,9 +125,6 @@
                 © 2023 Indian Products. Все права защищены.
             </p>
             <div class="flag-stripe" style="background-color: var(--indigo-green); height: 4px; margin-top: 12px;"></div>
-            <div class="flag-wheel" style="color: var(--indigo-blue); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                <i class="bi bi-gear-fill" style="font-size: 24px;"></i>
-            </div>
         </div>
     </footer>
 
