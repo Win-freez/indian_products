@@ -16,21 +16,27 @@ class ProductDAO(BaseDao):
 
     @classmethod
     async def get_all(cls, db: AsyncSession) -> list[Product]:
-        stmt = select(Product).options(joinedload(Product.category)).order_by(Product.name)
+        """
+        Получить все товары с подгрузкой категории.
+        Возвращает список отсортированных по имени товаров.
+        """
+        stmt = (
+            select(Product).options(joinedload(Product.category)).order_by(Product.name)
+        )
         result = await db.execute(stmt)
         products = result.scalars().all()
         return list(products)
-        
 
     @classmethod
     async def create_product(
-        cls, db: AsyncSession, user: User, new_product: ProductSchema
+        cls,
+        db: AsyncSession,
+        new_product: ProductSchema
     ) -> Product:
-        if not user.is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can't create product. Only admin has permissions.",
-            )
+        """
+        Создать новый товар. Доступно только администратору.
+        Генерирует уникальный slug и сохраняет товар в базе.
+        """
         slug = await check_unique_slug(name=new_product.name, model=cls.model, db=db)
         product = await cls.create(db=db, **new_product.model_dump(), slug=slug)
         return product
@@ -39,6 +45,9 @@ class ProductDAO(BaseDao):
     async def get_product_by_category(
         cls, db: AsyncSession, category_slug: str
     ) -> list[Product]:
+        """
+        Получить товары по slug категории. Если категория не найдена — ошибка 404.
+        """
         stmt = select(Category).where(Category.slug == category_slug)
         result = await db.execute(stmt)
         category = result.scalar_one_or_none()
@@ -48,7 +57,11 @@ class ProductDAO(BaseDao):
                 status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
             )
 
-        stmt = select(Product).options(joinedload(Product.category)).where(Product.category_id == category.id)
+        stmt = (
+            select(Product)
+            .options(joinedload(Product.category))
+            .where(Product.category_id == category.id)
+        )
         result = await db.execute(stmt)
         products = result.scalars().all()
 
@@ -58,6 +71,10 @@ class ProductDAO(BaseDao):
     async def get_filtered_products(
         cls, db: AsyncSession, product_filters: ProductFilters
     ) -> list[Product]:
+        """
+        Получить отфильтрованные товары по нескольким полям:
+        имя, диапазон цен, категория, наличие, активность и рейтинг.
+        """
         stmt = select(Product).options(joinedload(Product.category))
 
         if product_filters.name:
@@ -84,16 +101,13 @@ class ProductDAO(BaseDao):
     async def update_product(
         cls,
         db: AsyncSession,
-        user: User,
         product_data: ProductSchema | ProductUpdateSchema,
         product: Product,
     ) -> Product:
-        if not user.is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can't update product. Only admin has permissions.",
-            )
-
+        """
+        Обновить товар. Только для администратора.
+        Обновляет slug при изменении имени и сохраняет изменения в БД.
+        """
         data = product_data.model_dump(exclude_unset=True)
 
         if "name" in data and data["name"] != product.name:

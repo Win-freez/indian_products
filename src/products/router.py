@@ -45,15 +45,16 @@ async def create_product(
     new_product: ProductSchema,
     response: Response,
 ) -> ProductOutSchema:
-    product = await ProductDAO.create_product(db, user, new_product)
+    product = await ProductDAO.create_product(db=db, new_product=new_product)
     response.headers["Location"] = f"{router.prefix}/{product.slug}"
 
     return ProductOutSchema.model_validate(product)
 
 
 @router.get("/categories/{slug}", status_code=status.HTTP_200_OK)
-async def product_by_category(
-    db: Annotated[AsyncSession, Depends(get_db)], slug: str
+async def products_by_category(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    slug: str
 ) -> list[ProductOutSchema]:
     products = await ProductDAO.get_product_by_category(db=db, category_slug=slug)
 
@@ -80,7 +81,7 @@ async def update_product(
     product: Annotated[Product, Depends(get_instance_by_slug(Product))],
 ) -> ProductOutSchema:
     product = await ProductDAO.update_product(
-        db=db, user=user, product_data=product_data, product=product
+        db=db, product_data=product_data, product=product
     )
 
     return ProductOutSchema.model_validate(product)
@@ -94,13 +95,13 @@ async def update_product_partition(
     product: Annotated[Product, Depends(get_instance_by_slug(Product))],
 ) -> ProductOutSchema:
     product = await ProductDAO.update_product(
-        db=db, user=user, product_data=product_data, product=product
+        db=db, product_data=product_data, product=product
     )
     return ProductOutSchema.model_validate(product)
 
 
 @router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_products(
+async def delete_product(
     db: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User, Depends(check_user_is_admin)],
     product: Product = Depends(get_instance_by_slug(Product)),
