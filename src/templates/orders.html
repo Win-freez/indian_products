@@ -38,7 +38,7 @@
         // Функция для получения всех заказов
         async function getOrders() {
             try {
-                const response = await fetch('/orders/');
+                const response = await fetch('/v1/orders/');
                 if (!response.ok) {
                     throw new Error('Не удалось получить заказы');
                 }
@@ -128,7 +128,7 @@
         // Функция для подтверждения отмены заказа
         async function cancelOrder() {
             try {
-                const response = await fetch(`/orders/${orderIdToCancel}/cancel`, {
+                const response = await fetch(`/v1/orders/${orderIdToCancel}/cancel`, {
                     method: 'POST',
                 });
                 if (!response.ok) {

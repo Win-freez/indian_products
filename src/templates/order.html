@@ -11,7 +11,7 @@
         <div class="card-body">
             <p><strong>Дата создания:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
             <p><strong>Статус:</strong>
-                <span class="text-{{ order.status.value|lower }}">{{ order.status.value }}</span>  <!-- Используем значение из Enum -->
+                <span class="text-{{ order.status.value|lower }}">{{ order.status.value }}</span>
             </p>
 
             <hr>
@@ -23,7 +23,7 @@
                         <strong>{{ item.product_name_snapshot }}</strong><br>
                         Кол-во: {{ item.quantity }}
                     </div>
-                    <span>{{ "%.2f"|format(item.price_at_time|float) }} ₽</span> <!-- Форматирование цены -->
+                    <span>{{ "%.2f"|format(item.price_at_time|float) }} ₽</span>
                 </li>
                 {% endfor %}
             </ul>
@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="card-footer d-flex justify-content-between">
-            {% if order.status.value == 'оформлен' %}  <!-- Статус теперь сравниваем с его строковым значением -->
+            {% if order.status.value == 'оформлен' %}
             <button class="btn btn-danger" onclick="cancelOrder({{ order.id }})">Отменить заказ</button>
             {% endif %}
             <a href="/pages/orders" class="btn btn-outline-secondary">Назад к списку заказов</a>

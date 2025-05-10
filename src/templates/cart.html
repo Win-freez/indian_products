@@ -7,13 +7,28 @@
     <h2>Ваша корзина</h2>
     <p>Пожалуйста, проверьте товары в вашей корзине перед оформлением заказа.</p>
 
-    <div id="cart-items-container">
-        <!-- Динамически добавляемые товары из корзины -->
-    </div>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">№</th>
+                <th scope="col">Товар</th>
+                <th scope="col">Цена</th>
+                <th scope="col">Количество</th>
+                <th scope="col">Сумма</th>
+                <th scope="col">Действия</th>
+            </tr>
+        </thead>
+        <tbody id="cart-items-container">
+            <!-- Динамически добавляемые товары из корзины -->
+        </tbody>
+    </table>
 
     <div class="d-flex justify-content-between mt-4">
         <h4>Итого: <span id="total-price">0.00</span> ₽</h4>
-        <button id="checkout-btn" class="btn btn-green">Оформить заказ</button>
+        <div>
+            <button id="checkout-btn" class="btn btn-green">Оформить заказ</button>
+            <button id="clear-cart-btn" class="btn btn-danger ml-2">Очистить корзину</button>
+        </div>
     </div>
 </div>
 
