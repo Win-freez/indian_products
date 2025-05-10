@@ -1,0 +1,30 @@
+:root {
+    --indigo-green: #138808;
+    --indigo-saffron: #FF9933;
+    --indigo-white: #FFFFFF;
+    --indigo-blue: #000080;
+}
+
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.btn-green {
+    background-color: var(--indigo-green);
+    color: white;
+}
+
+.btn-green:hover {
+    background-color: #0e6e0a;
+    color: white;
+}
+
+.cart-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+
+footer {
+    background-color: var(--indigo-green) !important;
+}

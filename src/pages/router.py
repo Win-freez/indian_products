@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.cart.schemas import CartOutSchema
 from src.categories.router import get_all_categories
 from src.categories.schemas import CategoryOutSchema
 from src.database import get_db
@@ -14,6 +15,7 @@ from src.products.schemas import ProductOutSchema
 from src.templates import templates
 from src.users.dependencies import get_access_token
 from src.users.router import get_user_using_token
+from src.cart.router import get_cart
 
 router = APIRouter(tags=['Frontend'])
 
@@ -51,7 +53,6 @@ async def show_filter_products(request: Request, products: list[ProductOutSchema
                                       context={"request": request, "products": products})
 
 
-
 @router.get("/registration", response_class=HTMLResponse)
 async def show_registration(request: Request):
     return templates.TemplateResponse("registration.html",
@@ -80,8 +81,14 @@ async def show_profile(request: Request, db: Annotated[AsyncSession, Depends(get
 async def show_orders(request: Request, orders: list[OrderOutSchema] = Depends(get_orders)):
     return templates.TemplateResponse("orders.html", request=request, context={"request": request, "orders": orders})
 
+
 @router.get('/orders/{object_id}', response_class=HTMLResponse)
 async def show_order(request: Request, order: OrderOutSchema = Depends(get_order)):
     return templates.TemplateResponse("order.html", request=request, context={"request": request,
-                                                                               "order": order})
+                                                                              "order": order})
 
+
+@router.get('/cart', response_class=HTMLResponse)
+async def show_cart(request: Request, cart: CartOutSchema = Depends(get_cart)):
+    return templates.TemplateResponse('cart.html', request=request, context={"request": request,
+                                                                             "cart": cart})

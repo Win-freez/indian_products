@@ -42,7 +42,8 @@ def main_root():
     return {
         "message": "Main API entry",
         "versions": {
-            "v1": "/v1/docs"
+            "v1": "/v1/docs",
+            "frontend": "/pages/docs"
         }
     }
 

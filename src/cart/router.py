@@ -11,7 +11,7 @@ from src.database import get_db
 from src.users.dependencies import get_user_using_token
 from src.users.models import User
 
-router = APIRouter(prefix="/cart", tags=["Корзина"])
+router = APIRouter(prefix="/cart", tags=["Cart"])
 
 
 @router.get("/", status_code=status.HTTP_200_OK)

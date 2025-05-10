@@ -1,6 +1,6 @@
 async function getOrders() {
     try {
-        const response = await fetch('/orders/');
+        const response = await fetch('/v1/orders/');
         if (!response.ok) {
             throw new Error('Не удалось получить заказы');
         }
@@ -26,9 +26,10 @@ function displayOrders(orders) {
         ordersContainer.appendChild(orderElement);
     });
 }
+
 async function getOrderById(orderId) {
     try {
-        const response = await fetch(`/orders/${orderId}`);
+        const response = await fetch(`/v1/orders/${orderId}`);
         if (!response.ok) {
             throw new Error('Не удалось получить заказ');
         }
@@ -49,9 +50,10 @@ function displayOrder(order) {
         <button onclick="cancelOrder(${order.id})">Отменить заказ</button>
     `;
 }
+
 async function createOrder(orderData) {
     try {
-        const response = await fetch('/orders/', {
+        const response = await fetch('/v1/orders/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -67,9 +69,10 @@ async function createOrder(orderData) {
         console.error(error);
     }
 }
+
 async function cancelOrder(orderId) {
     try {
-        const response = await fetch(`/orders/${orderId}/cancel`, {
+        const response = await fetch(`/v1/orders/${orderId}/cancel`, {
             method: 'POST',
         });
         if (!response.ok) {
@@ -82,9 +85,10 @@ async function cancelOrder(orderId) {
         console.error(error);
     }
 }
+
 async function deleteOrder(orderId) {
     try {
-        const response = await fetch(`/orders/${orderId}`, {
+        const response = await fetch(`/v1/orders/${orderId}`, {
             method: 'DELETE',
         });
         if (!response.ok) {
