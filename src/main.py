@@ -10,22 +10,31 @@ from src.users.router import router as auth_router
 from src.cart.router import router as cart_router
 
 app = FastAPI()
+app_v1 = FastAPI(
+    title="API v1",
+    version="1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
 
+app.mount('/v1', app_v1)
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
-app.include_router(pages_router)
-app.include_router(auth_router)
-app.include_router(category_router)
-app.include_router(product_router)
-app.include_router(order_router)
-app.include_router(cart_router)
+app_v1.include_router(pages_router)
+app_v1.include_router(auth_router)
+app_v1.include_router(category_router)
+app_v1.include_router(product_router)
+app_v1.include_router(order_router)
+app_v1.include_router(cart_router)
 
 @app.get("/")
-async def root():
+def main_root():
     return {
-        "message": "Backend API for Indian Products",
-        "frontend": "/pages",
-        "docs": "/docs"
+        "message": "Main API entry",
+        "versions": {
+            "v1": "/v1/docs"
+        }
     }
 
 

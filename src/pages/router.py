@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.categories.router import get_all_categories
 from src.categories.schemas import CategoryOutSchema
-from src.products.router import get_all_products, get_product, product_by_category
+from src.products.router import get_all_products, get_product, products_by_category
 from src.products.schemas import ProductOutSchema
 from src.templates import templates
 from src.users.schemas import UserOutSchema
@@ -48,7 +48,7 @@ async def show_product(request: Request,
 
 
 @router.get("/categories/{slug}", response_class=HTMLResponse)
-async def show_filter_products(request: Request, products: list[ProductOutSchema] = Depends(product_by_category)):
+async def show_filter_products(request: Request, products: list[ProductOutSchema] = Depends(products_by_category)):
     return templates.TemplateResponse("products.html",
                                       context={"request": request, "products": products})
 
