@@ -18,10 +18,19 @@ app_v1 = FastAPI(
     openapi_url="/openapi.json"
 )
 
+app_pages = FastAPI(
+    title="Frontend",
+    version="1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
+
 app.mount('/v1', app_v1)
+app.mount('/pages', app_pages)
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
-app_v1.include_router(pages_router)
+app_pages.include_router(pages_router)
 app_v1.include_router(auth_router)
 app_v1.include_router(category_router)
 app_v1.include_router(product_router)

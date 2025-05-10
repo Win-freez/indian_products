@@ -249,3 +249,4 @@ class CartDAO:
         stmt = delete(CartItem).where(CartItem.cart_id == cart.id)
         await db.execute(stmt)
         await db.commit()
+

@@ -14,8 +14,8 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 
 @router.get("/", status_code=status.HTTP_200_OK)
 async def get_orders(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(get_user_using_token)],
+        db: Annotated[AsyncSession, Depends(get_db)],
+        user: Annotated[User, Depends(get_user_using_token)],
 ) -> list[OrderShortOutSchema]:
     orders = await OrderDAO.get_all_order(db=db, user=user)
 
@@ -24,9 +24,9 @@ async def get_orders(
 
 @router.get("/{object_id}", status_code=status.HTTP_200_OK)
 async def get_order(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(get_user_using_token)],
-    object_id: Annotated[int, Path(..., description="ID заказа")],
+        db: Annotated[AsyncSession, Depends(get_db)],
+        user: Annotated[User, Depends(get_user_using_token)],
+        object_id: Annotated[int, Path(..., description="ID заказа")],
 ) -> OrderOutSchema:
     order = await OrderDAO.get_user_order_by_id(db=db, user=user, object_id=object_id)
 
@@ -35,9 +35,9 @@ async def get_order(
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_order(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(get_user_using_token)],
-    new_order: OrderCreateSchema,
+        db: Annotated[AsyncSession, Depends(get_db)],
+        user: Annotated[User, Depends(get_user_using_token)],
+        new_order: OrderCreateSchema,
 ) -> OrderOutSchema:
     order = await OrderDAO.create_order(db=db, user=user, new_order=new_order)
 
@@ -46,9 +46,9 @@ async def create_order(
 
 @router.post("/{object_id}/cancel", status_code=status.HTTP_200_OK)
 async def cancel_order(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(get_user_using_token)],
-    object_id: Annotated[int, Path(..., ge=0, description="ID заказа")],
+        db: Annotated[AsyncSession, Depends(get_db)],
+        user: Annotated[User, Depends(get_user_using_token)],
+        object_id: Annotated[int, Path(..., ge=0, description="ID заказа")],
 ) -> OrderOutSchema:
     order = await OrderDAO.cancel_order(db=db, user=user, object_id=object_id)
     return OrderOutSchema.model_validate(order)
@@ -56,9 +56,18 @@ async def cancel_order(
 
 @router.delete("/{object_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_order(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[User, Depends(get_user_using_token)],
-    object_id: Annotated[int, Path(..., ge=0, description="ID заказа")],
+        db: Annotated[AsyncSession, Depends(get_db)],
+        user: Annotated[User, Depends(get_user_using_token)],
+        object_id: Annotated[int, Path(..., ge=0, description="ID заказа")],
 ) -> None:
     order = await OrderDAO.get_user_order_by_id(db=db, user=user, object_id=object_id)
     await OrderDAO.delete(db=db, obj=order)
+
+
+@router.post('/from-cart', status_code=status.HTTP_201_CREATED)
+async def create_order_from_cart(
+        db: Annotated[AsyncSession, Depends(get_db)],
+        user: Annotated[User, Depends(get_user_using_token)]
+) -> OrderOutSchema:
+    order = await OrderDAO.create_order_from_cart(db=db, user=user)
+    return OrderOutSchema.model_validate(order)

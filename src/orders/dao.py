@@ -7,9 +7,10 @@ from sqlalchemy.orm import selectinload, joinedload
 
 from src.dao.base_dao import BaseDao
 from src.orders.models import Order, OrderItem
-from src.orders.schemas import OrderCreateSchema, OrderEnum
+from src.orders.schemas import OrderCreateSchema, OrderEnum, OrderItemSchema
 from src.products.models import Product
 from src.users.models import User
+from src.cart.dao import CartDAO
 
 
 class OrderDAO(BaseDao):
@@ -157,5 +158,33 @@ class OrderDAO(BaseDao):
         order.status = OrderEnum.cancelled
         await db.commit()
         await db.refresh(order)
+
+        return order
+
+    @classmethod
+    async def create_order_from_cart(cls, db: AsyncSession, user: User):
+        """
+        Создание заказа на основе сформированной корзины пользователя
+        """
+        # Получаем корзину пользователя с подгруженными товарами
+        cart = await CartDAO.get_cart(db=db, user=user)
+
+        if not cart.cart_items:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Корзина пуста")
+
+        # Создаем список схем OrderItemSchema для создания заказа
+        order_items = [
+            OrderItemSchema(
+                product_slug=cart_item.product_slug,
+                quantity=cart_item.quantity
+            )
+            for cart_item in cart.cart_items
+        ]
+        # Создаем схему OrderCreateSchema для создания заказа
+        new_order = OrderCreateSchema(order_items=order_items)
+        # Создаем заказ
+        order = await cls.create_order(db=db, user=user, new_order=new_order)
+        # Очищаем корзину после заказа
+        await CartDAO.clear_cart(db=db, user=user, cart=cart)
 
         return order

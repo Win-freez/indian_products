@@ -25,13 +25,20 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 class Base(DeclarativeBase):
-    metadata = MetaData(naming_convention=settings.naming_convention)
-
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow(), server_default=func.now()
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        server_default=func.now(),
+        nullable=False
     )
+
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, onupdate=datetime.utcnow(), default=None
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        server_default=func.now(),
+        server_onupdate=func.now(),
+        nullable=False
     )
 
     def __repr__(self):

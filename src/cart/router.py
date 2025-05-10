@@ -66,3 +66,4 @@ async def clear_cart(
         cart: Annotated[Cart, Depends(get_cart_info)],
 ):
     await CartDAO.clear_cart(db=db, user=user, cart=cart)
+

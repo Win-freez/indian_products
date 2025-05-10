@@ -1,23 +1,21 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Request, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.categories.router import get_all_categories
 from src.categories.schemas import CategoryOutSchema
+from src.database import get_db
+from src.orders.router import get_order, get_orders
+from src.orders.schemas import OrderOutSchema
 from src.products.router import get_all_products, get_product, products_by_category
 from src.products.schemas import ProductOutSchema
 from src.templates import templates
-from src.users.schemas import UserOutSchema
-from src.users.router import get_user_info, get_user_using_token
 from src.users.dependencies import get_access_token
-from src.users.models import User
-from src.database import get_db
-from src.orders.schemas import OrderOutSchema
-from src.orders.router import get_order, get_orders
+from src.users.router import get_user_using_token
 
-router = APIRouter(prefix='/pages', tags=['Frontend'])
+router = APIRouter(tags=['Frontend'])
 
 
 @router.get("/", response_class=HTMLResponse)
