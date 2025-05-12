@@ -9,7 +9,25 @@ from src.products.router import router as product_router
 from src.users.router import router as auth_router
 from src.cart.router import router as cart_router
 
-app = FastAPI()
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.decorator import cache
+
+from redis import asyncio as aioredis
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    redis = aioredis.from_url("redis://localhost",)
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
 app_v1 = FastAPI(
     title="API v1",
     version="1.0",

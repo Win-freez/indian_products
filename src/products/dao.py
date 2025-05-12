@@ -1,14 +1,13 @@
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from src.categories.models import Category
 from src.dao.base_dao import BaseDao
 from src.dependecies.dependencies import check_unique_slug
 from src.products.models import Product
 from src.products.schemas import ProductSchema, ProductFilters, ProductUpdateSchema
-from src.users.models import User
 
 
 class ProductDAO(BaseDao):
@@ -39,10 +38,15 @@ class ProductDAO(BaseDao):
         """
         slug = await check_unique_slug(name=new_product.name, model=cls.model, db=db)
         product = await cls.create(db=db, **new_product.model_dump(), slug=slug)
-        return product
+
+        stmt = select(cls.model).options(joinedload(cls.model.category)).where(cls.model.id == product.id)
+        result = await db.execute(stmt)
+        product_with_category = result.scalar_one()
+
+        return product_with_category
 
     @classmethod
-    async def get_product_by_category(
+    async def get_products_by_category(
         cls, db: AsyncSession, category_slug: str
     ) -> list[Product]:
         """
